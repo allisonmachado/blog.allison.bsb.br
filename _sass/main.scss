@@ -12,9 +12,8 @@ $footer-background-color: hsl(0, 0%, 75%);
     gap: 3rem;
 }
 
-iframe {
-    width: 100vw;
-    height: 100vh;
-}
-
 @import "../node_modules/bulma/bulma";
+
+.container {
+    margin: 3rem;
+}
