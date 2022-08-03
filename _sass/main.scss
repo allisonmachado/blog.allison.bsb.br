@@ -5,4 +5,11 @@
 
 $footer-background-color: hsl(0, 0%, 75%);
 
+.content-container {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    gap: 3rem;
+}
+
 @import "../node_modules/bulma/bulma";

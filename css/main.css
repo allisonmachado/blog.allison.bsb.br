@@ -1,4 +1,11 @@
 @charset "UTF-8";
+.content-container {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 3rem;
+}
+
 /*! bulma.io v0.9.3 | MIT License | github.com/jgthms/bulma */
 /* Bulma Utilities */
 .pagination-previous,
