@@ -6,6 +6,11 @@
   gap: 3rem;
 }
 
+iframe {
+  width: 100vw;
+  height: 100vh;
+}
+
 /*! bulma.io v0.9.3 | MIT License | github.com/jgthms/bulma */
 /* Bulma Utilities */
 .pagination-previous,
