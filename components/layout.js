@@ -3,6 +3,7 @@ import Image from 'next/image'
 import styles from './layout.module.css'
 import utilStyles from '../styles/utils.module.css'
 import Link from 'next/link'
+import Social from './social'
 
 const name = 'Allison Machado Gonçalves'
 export const siteTitle = 'blog.allison.bsb.br'
@@ -37,6 +38,7 @@ export default function Layout({ children, home }) {
               alt={name}
             />
             <h1 className={utilStyles.heading2Xl}>{name}</h1>
+            <Social />
           </>
         ) : (
           <>
@@ -53,9 +55,7 @@ export default function Layout({ children, home }) {
               </a>
             </Link>
             <h2 className={utilStyles.headingLg}>
-              <Link href="/">
-                <a className={utilStyles.colorInherit}>{name}</a>
-              </Link>
+              <Social />
             </h2>
           </>
         )}

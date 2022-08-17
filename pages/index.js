@@ -12,7 +12,6 @@ export default function Home({ allPostsData }) {
         <title>{siteTitle}</title>
       </Head>
       <section className={utilStyles.headingMd}>
-        <p>[ Software Developer, always learning... ]</p>
         <p>
           <em>- “Quality is not an act, it is a habit.”</em>
         </p>
