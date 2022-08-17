@@ -12,19 +12,19 @@ export default function Social() {
       <FontAwesomeIcon
         icon={faLinkedin}
       />
-      <span>/in/allisonmachado/ <Space /></span>
+      <span>/in/allisonmachado/ <Space times={4}/></span>
     </a>
     <a href="https://github.com/allisonmachado">
       <FontAwesomeIcon
         icon={faGithub}
       />
-      <span>/allisonmachado/ <Space /></span>
+      <span>/allisonmachado/ <Space times={4}/></span>
     </a>
     <a href="https://twitter.com/allisonmachado_">
       <FontAwesomeIcon
         icon={faTwitter}
       />
-      <span>@allisonmachado_ <Space /></span>
+      <span>@allisonmachado_ <Space times={4}/></span>
     </a>
   </p>
 }
