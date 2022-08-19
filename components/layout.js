@@ -54,12 +54,12 @@ export default function Layout({ children, home }) {
                 />
               </a>
             </Link>
-            <h2 className={utilStyles.headingLg}>
-              <Social />
-            </h2>
+            <h2 className={utilStyles.heading2Xl}>{name}</h2>
+            <Social />
           </>
         )}
       </header>
+      <hr />
       <main>{children}</main>
       {!home && (
         <div className={styles.backToHome}>
