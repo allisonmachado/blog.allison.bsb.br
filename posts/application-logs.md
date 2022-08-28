@@ -47,3 +47,4 @@ To mitigate this issue, the developers working in a project could introduce a ti
 
 * [Python Logging Tutorial](https://docs.python.org/3.8/howto/logging.html#logging-basic-tutorial)
 * [12 Factor App - Logs](https://12factor.net/logs)
+* [Lambda structured logging](https://docs.aws.amazon.com/lambda/latest/operatorguide/parse-logs.html)

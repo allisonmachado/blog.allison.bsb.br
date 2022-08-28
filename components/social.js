@@ -9,7 +9,7 @@ import {
 export default function Social() {
   return (<div className="container">
     <div className="row">
-      <div class="one-third column">
+      <div className="one-third column">
         <a href="https://www.linkedin.com/in/allisonmachado/">
           <FontAwesomeIcon
             icon={faLinkedin}
@@ -17,7 +17,7 @@ export default function Social() {
           <span>/in/allisonmachado/ <Space /></span>
         </a>
       </div>
-      <div class="one-third column">
+      <div className="one-third column">
         <a href="https://github.com/allisonmachado">
           <FontAwesomeIcon
             icon={faGithub}
@@ -25,7 +25,7 @@ export default function Social() {
           <span>/allisonmachado/ <Space /></span>
         </a>
       </div>
-      <div class="one-third column">
+      <div className="one-third column">
         <a href="https://twitter.com/allisonmachado_">
           <FontAwesomeIcon
             icon={faTwitter}
