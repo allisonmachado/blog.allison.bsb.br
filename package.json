@@ -1,6 +1,6 @@
 {
   "name": "blog.allison.bsb.br",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "My personal blog at blog.allison.bsb.br",
   "private": true,
   "scripts": {
