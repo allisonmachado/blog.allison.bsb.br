@@ -39,7 +39,9 @@ If you just want to log into your running container, use the [exec][4] command r
 
 #### Run a temporary mysql instance
 
-Sometimes its good to have a temporary container (flag `--rm`) for some quick tests:
+While containers can create, update, and delete files, those changes are lost when the container is removed and all changes are isolated to that container.  [Volumes][7] provide the ability to connect specific filesystem paths of the container back to the host machine. The mysql docker images use Volumes to keep data persisted across containers restarts. 
+
+Sometimes its good to have a temporary container (flag `--rm`), those containers do not leave dangling volumes behind:
 
 ```sh
 docker run 
@@ -50,7 +52,7 @@ docker run
   -d mysql:5.7
 ```
 
-Temporary containers do not leave dangling volumes behind!
+When a container is removed, an associated volume is not automatically removed as well. When a volume exists and is no longer connected to any containers, it's called a dangling volume.
 
 #### Run a Bash session
 
@@ -185,7 +187,8 @@ $ docker run -p 127.0.0.1:3308:3306
 * [Docker Inspect Command][3]
 * [Docker Exec Command][4]
 * [MySQL Docker Hub][5]
-* [Docker Compose][5]
+* [Docker Compose][6]
+* [Docker Volume Types][7]
 
 [1]: https://docs.docker.com/engine/reference/run/
 [2]: https://docs.docker.com/network/bridge/
@@ -193,3 +196,4 @@ $ docker run -p 127.0.0.1:3308:3306
 [4]: https://docs.docker.com/engine/reference/commandline/exec/
 [5]: https://hub.docker.com/_/mysql
 [6]: https://docs.docker.com/compose/
+[7]: https://stackoverflow.com/questions/47150829/what-is-the-difference-between-binding-mounts-and-volumes-while-handling-persist
