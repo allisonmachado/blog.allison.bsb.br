@@ -127,6 +127,8 @@ Assuming the `Dockerfile` with build instructions is in the curren directory:
 docker build . --tag "name:tag"
 ```
 
+If you build without specifying the `:tag` part, then `latest` will be it's value.
+
 A docker image usually has 3 parts: 
 - name
 - tag
@@ -141,7 +143,6 @@ You can list the installed images with their Ids and digests by running:
 ```sh
 docker image ls --digests
 ```
-
 
 ----
 
@@ -178,6 +179,39 @@ $ docker run -p 127.0.0.1:3308:3306
   -v copy-col-mysql-sanbox:/var/lib/mysql
   -e MYSQL_ROOT_PASSWORD=123456
   -d mysql:5.7
+```
+
+----
+
+
+## Initializing MySQL instance from a logical backup
+
+Use a Dockerfile and the ADD command to insert your schema file into the /docker-entrypoint-initdb.d directory in the Docker container. The will run any files in this directory ending with ".sql":
+
+```Dockerfile
+FROM mysql:5.7
+
+ENV MYSQL_ROOT_PASSWORD=123456
+
+ADD schema.sql /docker-entrypoint-initdb.d
+
+EXPOSE 3306
+```
+
+Then build it:
+
+```sh
+docker build . --tag my-pre-populated-db
+```
+
+Finally, run your database:
+
+```sh
+docker run 
+  --rm 
+  -p 3306:3306 
+  --name my-pre-populated-container
+  -d my-pre-populated-db
 ```
 
 ## References
