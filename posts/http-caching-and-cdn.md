@@ -31,7 +31,7 @@ A private cache is a cache tied to a specific client — typically a browser cac
 
 ###### Shared caches
 
-The shared cache is located between the client and the server and can store responses that can be shared among users. Managed caches are explicitly deployed by service developers to offload the origin server and to deliver content efficiently. Examples include CDNs and Service Workers using the Cache API semantics. 
+The shared cache is located between the client and the server and can store responses that can be reused among users. Managed caches are explicitly deployed by service providers to offload the origin server and to deliver content efficiently. Examples include CDNs and Service Workers using the Cache API semantics. 
 
 > Carefully read the CDN documentation of whatever managed-cache mechanism you're using, and ensure you're controlling the cache properly in the ways described by the service documentation.
 
@@ -39,13 +39,13 @@ The shared cache is located between the client and the server and can store resp
 
 The way that resources are distinguished from one another is essentially based the request Method and URL like `GET /image/cat.png`
 
-> Take care to not up with a CDN caching and serving content to someone unauthenticated (because of the match in the method + url) for requests that actually requires authentication.
+> Take care to not end up with a CDN caching that can be served to someone unauthenticated (because of the match in the method + url) for requests that actually requires authentication.
 
 The [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) HTTP response header describes the parts of the request message aside from the method and URL that influence the content cache. This can be used to create a cache key that considers more than only request Method and URL. 
 
 ### Fresh and Stale based on age
 
-The criterion for determining when a response is fresh and when it is stale is age. **In HTTP, age is the time elapsed since the response was generated**. Consider the response:
+The criterion for determining when a response is fresh and when it is stale is based on age. **In HTTP, age is the time elapsed since the response was generated**. Consider the response:
 
 ```
 HTTP/1.1 200 OK
@@ -61,12 +61,12 @@ This response will be available for reuse in response to client requests for one
 
 ### Content Validation
 
-Stale responses are not immediately discarded. **HTTP has a mechanism to transform a stale response to a fresh one by asking the origin server.** This is called validation, or sometimes, revalidation. The headers `If-Modified-Since` and `If-None-Match` are sent by clients when the content becomes stale locally, that may allow the server to only return a `304 Not Modified` if the content has not changed since the specified time - thus saving bandwidth.
+Stale responses are not immediately discarded. **HTTP has a mechanism to transform a stale response to a fresh one by asking the origin server.** This is called validation, or sometimes, revalidation. The headers `If-Modified-Since` and `If-None-Match` are sent by clients when the content becomes stale locally. This mechanism allows the server to only return a `304 Not Modified` if the content has not changed since the specified time - thus saving bandwidth.
 
 
 ###### If-Modified-Since
 
-If the response becomes stale and the cache cannot be reused, the client sends a request with an `If-Modified-Since` request header, to ask the server if there have been any changes made since the specified time. Upon receiving a 304 response, the client reverts the stored stale response back to being fresh and can reuse it reusing the initial max-age.
+If the response becomes stale and the cache cannot be reused, the client sends a request with an `If-Modified-Since` request header, to ask the server if there have been any changes made since the specified time. Upon receiving a 304 response, the client reverts the stored stale response back to being fresh and can reuse it.
 
 
 ###### IF-None-Match (E-Tags)
@@ -90,7 +90,7 @@ When that response becomes stale, the client takes the value of the ETag respons
 
 If you do not want a response to be saved for reuse, or If the server does not support conditional cache requests you should make the client access the server every time and always get the latest response.
 
-To ensure that by default the latest versions of resources will always be transferred, it's common practice to make the default Cache-Control value include no-cache:
+To ensure that the latest versions of resources will always be transferred, it's common practice to make the default Cache-Control value include no-cache:
 
 ```
 Cache-Control: no-cache
