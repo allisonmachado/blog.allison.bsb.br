@@ -15,14 +15,14 @@ Instead of installing a MySQL in your localhost for development purposes, just u
 docker run -p 3306:3306
   --name mysql-sandbox
   -env MYSQL_ROOT_PASSWORD=123456
-  -detach mysql:5.7
+  -detach mysql:8.0
 ```
 
 If you want to connect to it from another container, you can do so by referencing it's Docker internal IP address:
 
 ```bash
 docker run -it
-  --rm mysql:5.7
+  --rm mysql:8.0
   mysql -h172.17.0.3 -uroot -p123456
 ```
 
@@ -49,7 +49,7 @@ docker run
   -p 3306:3306 
   --name mysql-sandbox 
   -e MYSQL_ROOT_PASSWORD=123456
-  -d mysql:5.7
+  -d mysql:8.0
 ```
 
 When a container is removed, an associated volume is not automatically removed as well. When a volume exists and is no longer connected to any containers, it's called a dangling volume.
@@ -178,7 +178,7 @@ $ docker run -p 127.0.0.1:3308:3306
   --name mysql-sandbox-copy
   -v copy-col-mysql-sanbox:/var/lib/mysql
   -e MYSQL_ROOT_PASSWORD=123456
-  -d mysql:5.7
+  -d mysql:8.0
 ```
 
 ----
@@ -189,7 +189,7 @@ $ docker run -p 127.0.0.1:3308:3306
 Use a Dockerfile and the ADD command to insert your schema file into the /docker-entrypoint-initdb.d directory in the Docker container. The will run any files in this directory ending with ".sql":
 
 ```Dockerfile
-FROM mysql:5.7
+FROM mysql:8.0
 
 ENV MYSQL_ROOT_PASSWORD=123456
 

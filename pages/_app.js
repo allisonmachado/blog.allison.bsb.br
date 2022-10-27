@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import '../styles/normalize.css'
 import '../styles/skeleton.css'
 import '../styles/global.css'
@@ -7,5 +8,10 @@ config.autoAddCss = false; // Tell Font Awesome to skip adding the CSS automatic
 
 
 export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />
+  return (
+    <>
+      <Component {...pageProps} />
+      <Analytics />
+    </>
+  );
 }
