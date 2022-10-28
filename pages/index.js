@@ -9,6 +9,7 @@ export default function Home({ allPostsData }) {
   return (
     <Layout home>
       <Head>
+        <meta name="google-site-verification" content="pe-SVf1337B3nBeCjZT_Kl24qJWa3YYn-gH6kz3msv4" />
         <title>{siteTitle}</title>
       </Head>
       <section className={utilStyles.headingMd}>
