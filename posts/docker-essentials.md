@@ -14,8 +14,8 @@ Instead of installing a MySQL in your localhost for development purposes, just u
 ```bash
 docker run -p 3306:3306
   --name mysql-sandbox
-  -env MYSQL_ROOT_PASSWORD=123456
-  -detach mysql:8.0
+  --env MYSQL_ROOT_PASSWORD=123456
+  --detach mysql:8.0
 ```
 
 If you want to connect to it from another container, you can do so by referencing it's Docker internal IP address:
