@@ -3,8 +3,6 @@ title: "Docker essential commands"
 date: "2021-12-17"
 ---
 
-## Run it with some sauce
-
 [Running containers][1] is the absolute minimum a developer need to know about docker. Here are a few tips:
 
 #### Run MySQL and expose it on Port 3306
@@ -176,7 +174,7 @@ Now spin up a new mysql instance based on the volume created:
 ```sh
 $ docker run -p 127.0.0.1:3308:3306
   --name mysql-sandbox-copy
-  -v copy-col-mysql-sanbox:/var/lib/mysql
+  -v new_volume:/var/lib/mysql
   -e MYSQL_ROOT_PASSWORD=123456
   -d mysql:8.0
 ```
