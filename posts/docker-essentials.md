@@ -179,6 +179,44 @@ $ docker run -p 127.0.0.1:3308:3306
   -d mysql:8.0
 ```
 
+## Export a docker volume on Mac OS
+
+First determine the target backup volume, you should find the path of the volume on the [xhyve][8] VM (the virtual machine manager that is used by docker-machine on Mac OSX):
+
+```json
+{
+  ...
+  "Mounts": [
+    {
+        "Type": "volume",
+        "Name": "4c53d7a76ebbd28aec327f9111318d9cb75378bb2469f6ec95be2d9091334e6e",
+        "Source": "/var/lib/docker/volumes/4c53d7a76ebbd28aec327f9111318d9cb75378bb2469f6ec95be2d9091334e6e/_data",
+        ...
+    }
+  ]
+}
+```
+
+Next, mount the virtual machine manager directory and the host directory into a container that will be responsible to copy the volume files:
+
+```sh
+docker run --rm -it \
+  -v ~/Workspace/docker-volume-backups:/backup \
+  -v /var/lib/docker/volumes/4c53d7a76ebbd28aec327f9111318d9cb75378bb2469f6ec95be2d9091334e6e/:/docker \
+  alpine:edge tar cfz /backup/mobietrain-db-backup-20221206.tgz /docker/
+```
+
+After that, extract the tar into your mac os system:
+
+
+
+```sh
+docker run --rm -it \
+  -v ~/Workspace/docker-volume-backups:/backup \
+  -v /var/lib/docker/volumes/4c53d7a76ebbd28aec327f9111318d9cb75378bb2469f6ec95be2d9091334e6e/:/docker \
+  alpine:edge
+```
+
 ----
 
 
@@ -221,6 +259,8 @@ docker run
 * [MySQL Docker Hub][5]
 * [Docker Compose][6]
 * [Docker Volume Types][7]
+* [Xhyve][8]
+* [Migrate Docker Volumes on Mac][9]
 
 [1]: https://docs.docker.com/engine/reference/run/
 [2]: https://docs.docker.com/network/bridge/
@@ -229,3 +269,5 @@ docker run
 [5]: https://hub.docker.com/_/mysql
 [6]: https://docs.docker.com/compose/
 [7]: https://stackoverflow.com/questions/47150829/what-is-the-difference-between-binding-mounts-and-volumes-while-handling-persist
+[8]: https://github.com/machyve/xhyve
+[9]: https://idoberko2.com/blog/migrate-docker-volume-osx/
