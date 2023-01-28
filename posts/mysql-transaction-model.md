@@ -3,7 +3,20 @@ title: "MySQL Transaction Model"
 date: "2023-01-27"
 ---
 
-## Databases Read Phenomena 
+## Introduction
+
+To have a good understanding of the MySQL Transaction Model, a few fundamental concepts related to this topic should be mastered first:
+
+- Databases Read Phenomena
+- Locking Mechanism
+- The `autocommit` setting
+- Transaction isolation 
+
+Transactions control data manipulation statement(s) to ensure they are Atomic, Consistent, Isolated and Durable. The way to signal the completion of the transaction to the database is by using either a COMMIT or ROLLBACK statement.  An COMMIT statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A ROLLBACK statement, on the other hand, cancels all modifications made by the current transaction.
+
+Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the InnoDB Engine.
+
+#### Databases Read Phenomena 
 
 In a multi-tenant environment, multiple transactions may be executing at the same time and accessing the database rows. If these transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
 
@@ -21,7 +34,7 @@ These phenomena can be avoided or minimized by using the appropriate isolation l
 
 - To avoid Phantom read use: <u>SERIALIZABLE READ</u> isolation level.
 
-## Locking Basics
+#### Locking Mechanism
 
 MySQL implements data row locking in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data, for instance if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.
 
@@ -63,7 +76,17 @@ A gap-lock taken by one transaction does not prevent another transaction from ta
 
 - TODO: define *Insert Intention Locks* and *Next-Key Locks* 
 
+#### The `autocommit` setting
 
+By default all user activity occurs inside a transaction. If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit START TRANSACTION or BEGIN statement and ending it with a COMMIT or ROLLBACK statement. Both COMMIT and ROLLBACK release all locks that were set during the current transaction.
+
+This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all changes to a table do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. From that point onwards, all sql statements are inside a fresh new transaction. As soon as whe finish running all sql statements one can either COMMIT or ROLLBACK (options also available in the menu).
+
+#### Transaction isolation
+
+Transaction isolation the setting that fine-tunes the balance between performance and reliability, consistency, and reproducibility of results when multiple transactions are making changes and performing queries at the same time.
+
+- TODO: write this section
 
 ## References
 
