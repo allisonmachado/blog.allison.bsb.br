@@ -13,38 +13,30 @@ To have a good understanding of the MySQL Transaction Model some fundamental con
 - The `autocommit` setting
 - Transaction isolation 
 
-Transactions control data manipulation statement(s) to ensure they are Atomic, Consistent, Isolated and Durable. The way to signal the completion of the transaction to the database is by using either a COMMIT or ROLLBACK statement.  An COMMIT statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A ROLLBACK statement, on the other hand, cancels all modifications made by the current transaction.
+Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of the transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement.  An <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction.
 
-Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the InnoDB Engine.
+Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the [InnoDB Engine][1].
 
 #### Databases Read Phenomena 
 
 In a multi-tenant environment, multiple transactions may be executing at the same time and accessing the database rows. If these transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
 
-- **Dirty read**: An operation that retrieves unreliable data, data that was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using what was never confirmed as accurate.
+- **Dirty read**: An operation that retrieves unreliable data, data that was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as accurate.
 
 - **Non-repeatable read**: The situation when a query retrieves data, and a later query within the same transaction retrieves what should be the same data, but the queries return different results (changed by another transaction committing in the meantime). This constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction (ACID compliant).
 
-- **Phantom read**: Similar to the situation above, but in this case a row may appear in the result set of a query, but not in the result set of an earlier query. For example, if a query is run twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. Again this constitutes a problem because data should be predictable within the same transaction (ACID compliant).
-
-These phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
-
-- To avoid Dirty read use: avoid using the isolation level known as <u>READ UNCOMMITTED</u>.
-
-- To avoid Non-repeatable read: use the <u>SERIALIZABLE READ</u> <u>REPEATABLE READ</u> levels.
-
-- To avoid Phantom read use: <u>SERIALIZABLE READ</u> isolation level.
+- **Phantom read**: Similar to the situation above, but in this case a row may appear in the result set of a query, but not in the result set of an earlier query. For example, if a query is run twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. This scenario is also a problem because data should be predictable within the same transaction (ACID compliant).
 
 #### Serializability
 
-Serializability in database management systems refers to the property that ensures that concurrent execution of transactions results in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete in order to ensure serializability. Achieved through the use of locking mechanisms described bellow. This process helps to ensure that transactions are executed in a serial order that respects the constraints of the system and maintains consistency - since the effects of each transaction are not lost or overridden by concurrent transactions, however it comes with a performance cost.
+Serializability in database management systems refers to the property that ensures that concurrent execution of transactions results in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described bellow.
 
-Transactions that access and modify the same resource could lead to incorrect results if not made serializable. Suppose there is a bank with two accounts, A and B, each with a balance of $100. Two transactions T1 and T2 are executed concurrently, each trying to transfer $100 from account A to account B. If these transactions are not executed in a serializable manner, the potential scenario could happen:
+Transactions that access and modify the same resource (database rows) could lead to incorrect results if not made serializable. Suppose there is a bank with two accounts, A and B, each with a balance of \$100. Two transactions T1 and T2 are executed concurrently, each trying to transfer \$100 from account A to account B if there are enough funds. If these transactions are not executed in a serializable manner, the potential scenario could happen:
 
-1. T1 reads the balance of A ($100)
-2. T2 reads the balance of A ($100)
-3. T1 subtracts $100 from A and adds $100 to B, making the balances A ($0) and B ($200)
-4. T2 subtracts $100 from A and adds $100 to B, making the balances A ($-100) and B ($300)
+1. T1 reads the balance of A (\$100)
+2. T2 reads the balance of A (\$100)
+3. T1 subtracts \$100 from A and adds \$100 to B, making the balances A (\$0) and B (\$200)
+4. T2 subtracts \$100 from A and adds \$100 to B, making the balances A (\$-100) and B (\$300)
 
 In this scenario, both transactions have executed concurrently, interpreting the balance incorrectly, leading to an incorrect final state of the system, where the balance in account A is negative and the total balance of both accounts is $300. To avoid this, serializability would require that one of the transactions wait for the other to complete before executing.
 
@@ -100,11 +92,23 @@ This feature is frequently used for cases where sql scripts need to be executed 
 
 Transaction isolation the setting that fine-tunes the balance between performance and reliability, consistency, and reproducibility of results when multiple transactions are making changes and performing queries at the same time.
 
-- TODO: write this section
+The Databases Read Phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
+
+- To avoid Dirty read use: avoid using the isolation level known as <u>READ UNCOMMITTED</u>.
+
+- To avoid Non-repeatable read: use the <u>SERIALIZABLE READ</u> or <u>REPEATABLE READ</u> levels.
+
+- To avoid Phantom read use: <u>SERIALIZABLE READ</u> isolation level.
+
+The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE READ</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. This way, the same query can be run over and over within a transaction, and be certain to retrieve the same set of results each time. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to wait.
+
 
 ## References
 
-* [InnoDB Locking and Transaction Model][1]
+* [MySQL - InnoDB Locking and Transaction Model][1]
+* [Prisma Data Guide - ACID][2]
+* [Digital Ocean - SQL Commit And Rollback][3]
 
 [1]: https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-transaction-model.html
-
+[2]: https://www.prisma.io/dataguide/intro/database-glossary#acid
+[3]: https://www.digitalocean.com/community/tutorials/sql-commit-sql-rollback
