@@ -94,13 +94,25 @@ Transaction isolation the setting that fine-tunes the balance between performanc
 
 The Databases Read Phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
 
-- To avoid Dirty read use: avoid using the isolation level known as <u>READ UNCOMMITTED</u>.
+- To avoid Dirty read use: avoid using the isolation level known as <u>READ COMMITTED</u>.
 
-- To avoid Non-repeatable read: use the <u>SERIALIZABLE READ</u> or <u>REPEATABLE READ</u> levels.
+- To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> levels.
 
-- To avoid Phantom read use: <u>SERIALIZABLE READ</u> isolation level.
+- To avoid Phantom read use: <u>SERIALIZABLE</u> isolation level.
 
-The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE READ</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. This way, the same query can be run over and over within a transaction, and be certain to retrieve the same set of results each time. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to wait.
+The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. This way, the same query can be run over and over within a transaction, and be certain to retrieve the same set of results each time. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to wait.
+
+###### READ UNCOMMITTED
+
+Under this isolation level SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This is allows dirty reads.
+
+###### READ COMMITTED
+
+This isolation level already provides *Consistent Nonlocking Reads* which means that InnoDB internally uses multi-versioning to present to a query a snapshot of the database at a point in time. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
+
+However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Hence it does not prevent the non-repeatable read phenomena.
+
+For locking reads (SELECT with FOR UPDATE or LOCK IN SHARE MODE), UPDATE statements, and DELETE statements, InnoDB locks only index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing Phantom reads to happen.
 
 
 ## References
