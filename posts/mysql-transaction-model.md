@@ -5,9 +5,10 @@ date: "2023-01-27"
 
 ## Introduction
 
-To have a good understanding of the MySQL Transaction Model, a few fundamental concepts related to this topic should be mastered first:
+To have a good understanding of the MySQL Transaction Model some fundamental concepts related to this topic should be mastered in sequence:
 
 - Databases Read Phenomena
+- Serializability 
 - Locking Mechanism
 - The `autocommit` setting
 - Transaction isolation 
@@ -33,6 +34,19 @@ These phenomena can be avoided or minimized by using the appropriate isolation l
 - To avoid Non-repeatable read: use the <u>SERIALIZABLE READ</u> <u>REPEATABLE READ</u> levels.
 
 - To avoid Phantom read use: <u>SERIALIZABLE READ</u> isolation level.
+
+#### Serializability
+
+Serializability in database management systems refers to the property that ensures that concurrent execution of transactions results in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete in order to ensure serializability. Achieved through the use of locking mechanisms described bellow. This process helps to ensure that transactions are executed in a serial order that respects the constraints of the system and maintains consistency - since the effects of each transaction are not lost or overridden by concurrent transactions, however it comes with a performance cost.
+
+Transactions that access and modify the same resource could lead to incorrect results if not made serializable. Suppose there is a bank with two accounts, A and B, each with a balance of $100. Two transactions T1 and T2 are executed concurrently, each trying to transfer $100 from account A to account B. If these transactions are not executed in a serializable manner, the potential scenario could happen:
+
+1. T1 reads the balance of A ($100)
+2. T2 reads the balance of A ($100)
+3. T1 subtracts $100 from A and adds $100 to B, making the balances A ($0) and B ($200)
+4. T2 subtracts $100 from A and adds $100 to B, making the balances A ($-100) and B ($300)
+
+In this scenario, both transactions have executed concurrently, interpreting the balance incorrectly, leading to an incorrect final state of the system, where the balance in account A is negative and the total balance of both accounts is $300. To avoid this, serializability would require that one of the transactions wait for the other to complete before executing.
 
 #### Locking Mechanism
 
