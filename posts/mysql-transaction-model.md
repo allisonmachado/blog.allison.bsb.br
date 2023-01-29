@@ -42,6 +42,8 @@ In this scenario, both transactions have executed concurrently, interpreting the
 
 #### Locking Mechanism
 
+Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is an SELECT statement with FOR UPDATE or LOCK IN SHARE MODE at the end. If you use FOR UPDATE rows examined by the query are write-locked until the end of the current transaction. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them.
+
 MySQL implements data row locking in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data, for instance if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.
 
 There are four types of locks:
@@ -98,22 +100,33 @@ The Databases Read Phenomena can be avoided or minimized by using the appropriat
 
 - To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> levels.
 
-- To avoid Phantom read use: <u>SERIALIZABLE</u> isolation level.
+- To avoid Phantom reads use: <u>SERIALIZABLE</u> isolation level.
 
-The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. This way, the same query can be run over and over within a transaction, and be certain to retrieve the same set of results each time. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to wait.
+The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to fail.
 
 ###### READ UNCOMMITTED
 
-Under this isolation level SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This is allows dirty reads.
+Under this isolation level, SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This looseness allows dirty reads.
 
 ###### READ COMMITTED
 
-This isolation level already provides *Consistent Nonlocking Reads* which means that InnoDB internally uses multi-versioning to present to a query a snapshot of the database at a point in time. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
+This isolation level provides *Consistent Nonlocking Reads* which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
 
 However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Hence it does not prevent the non-repeatable read phenomena.
 
-For locking reads (SELECT with FOR UPDATE or LOCK IN SHARE MODE), UPDATE statements, and DELETE statements, InnoDB locks only index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing Phantom reads to happen.
+For explicit locking reads, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen.
 
+###### REPEATABLE READ
+
+This isolation level provides one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent reads within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only voiding dirty-reads but also the non-repeatable read phenomena.
+
+For explicit locking reads, UPDATE, and DELETE statements, locking depends on whether the statement uses a unique index with a unique search condition or a range-type search condition. For the former MySQL locks only the index record found, for the latter it locks the index range scanned, using gap locks or next-key locks to block insertions by other sessions into the gaps covered by the range.
+
+Repeatable read is the default isolation level.
+
+###### SERIALIZABLE
+
+As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**.
 
 ## References
 
