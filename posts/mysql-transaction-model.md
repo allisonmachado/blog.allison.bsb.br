@@ -98,7 +98,7 @@ The difference between a MySQL next-key lock and a gap lock is that a next-key l
 
 #### The `autocommit` setting
 
-By default all user activity occurs inside a transaction. If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit START TRANSACTION or BEGIN statement and ending it with a COMMIT or ROLLBACK statement. Both COMMIT and ROLLBACK release all locks that were set during the current transaction.
+By default all user activity occurs inside a transaction. If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit `START TRANSACTION` or `BEGIN` statement and ending it with a `COMMIT` or `ROLLBACK` statement. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
 
 This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all changes to a table do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. From that point onwards, all sql statements are inside a fresh new transaction. As soon as whe finish running all sql statements one can either COMMIT or ROLLBACK.
 
@@ -115,6 +115,10 @@ The Databases Read Phenomena can be avoided or minimized by using the appropriat
 - To avoid Phantom reads use: <u>SERIALIZABLE</u> isolation level.
 
 The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to fail.
+
+The image bellow, taken from [this video][6], helps to summarize which read phenomena can happen under which isolation level:
+
+![MySQL Isolation Levels](/images/posts/mysql-isolation-levels.png 'MySQL Isolation Levels')
 
 ###### READ UNCOMMITTED
 
@@ -138,7 +142,7 @@ By default, MySQL operates in REPEATABLE READ transaction isolation level. In th
 
 ###### SERIALIZABLE
 
-As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**.
+As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome. It occurs when the execution order transactions causes them to have a different effect than if they were executed in some order.
 
 ## References
 
@@ -147,9 +151,19 @@ As described above being the most strict isolation level, used mostly for specif
 * [Digital Ocean - SQL Commit And Rollback][3]
 * [Stack Overflow - Explicit Locking Read][4]
 * [Stack Overflow - Locking Mechanisms][5]
+* [YouTube - MySQL Isolation Levels][6]
 
 [1]: https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-transaction-model.html
 [2]: https://www.prisma.io/dataguide/intro/database-glossary#acid
 [3]: https://www.digitalocean.com/community/tutorials/sql-commit-sql-rollback
 [4]: https://stackoverflow.com/questions/32827650/mysql-innodb-difference-between-for-update-and-lock-in-share-mode?rq=1
 [5]: https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking?rq=1
+[6]: https://www.youtube.com/watch?v=4EajrPgJAk0
+
+
+## TODO
+
+- Use this as an example:
+    https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
+
+    
