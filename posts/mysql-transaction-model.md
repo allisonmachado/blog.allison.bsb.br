@@ -8,28 +8,28 @@ date: "2023-01-27"
 To have a good understanding of the MySQL Transaction Model some fundamental concepts related to this topic should be mastered in sequence:
 
 - Databases Read Phenomena
-- Serializability 
+- Write Serializability
 - Locking Mechanism
 - The `autocommit` setting
-- Transaction isolation 
+- Transaction isolation
 
-Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of the transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement.  An <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction.
+Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of a transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement. A <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction.
 
 Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the [InnoDB Engine][1].
 
 #### Databases Read Phenomena 
 
-In a multi-tenant environment, multiple transactions may be executing at the same time and accessing the database rows. If these transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
+In a multi-tenant environment, several transactions may be executing at the same time and accessing the database rows. If the transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
 
-- **Dirty read**: An operation that retrieves unreliable data, data that was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as accurate.
+- **Dirty read**: An operation that retrieves unreliable data, data that was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as permanent.
 
 - **Non-repeatable read**: The situation when a query retrieves data, and a later query within the same transaction retrieves what should be the same data, but the queries return different results (changed by another transaction committing in the meantime). This constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
-- **Phantom read**: Similar to the situation above, but in this case a row may appear in the result set of a query, but not in the result set of an earlier query of the same transaction. For example, if a query is run twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
+- **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, if a query is runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
-#### Serializability
+#### Write Serializability
 
-Serializability in database management systems refers to the property that ensures that concurrent execution of transactions results in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described bellow.
+Serializability refers to the property that ensures that concurrent execution of transactions that write to data result in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described in this article.
 
 Transactions that access and modify the same resource (database rows) could lead to incorrect results if not made serializable. Suppose there is a bank with two accounts, A and B, each with a balance of \$100. Two transactions T1 and T2 are executed concurrently, each trying to transfer \$100 from account A to account B if there are enough funds. If these transactions are not executed in a serializable manner, the potential scenario could happen:
 
@@ -42,7 +42,7 @@ In this scenario, both transactions have executed concurrently, interpreting the
 
 #### Locking Mechanism
 
-Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is an [SELECT statement with FOR UPDATE or LOCK IN SHARE MODE at the end][4]. If you use FOR UPDATE rows examined by the query are write-locked until the end of the current transaction. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them.
+Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is a [SELECT statement with FOR UPDATE or LOCK IN SHARE MODE at the end][4]. If you use FOR UPDATE, rows examined by the query are write-locked until the end of the current transaction. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them.
 
 MySQL implements data [row locking][5] in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data, for instance if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.
 
@@ -78,7 +78,7 @@ If transaction `T1` holds a shared (S) lock on row r, then requests from some di
 
 If a transaction `T1` holds an exclusive (X) lock on row r, a request from some distinct transaction `T2` for a lock of either type on r cannot be granted immediately. Instead, transaction `T2` has to wait for transaction T1 to release its lock on row r.
 
-Depending on how the locks are assigned to rows, they can be called by specific names. For example, locks placed on individual records in a table are called `Record Locks`. Locks that are placed on a range of rows between two index records, used to prevent other transactions from inserting new records into the range are called `Gap Locks`. And finally,  locks that cover both a specific record and the gap before it in an index, used to protect both the targeted record and prevent insertion of new records into the gap are called `Next-key Locks`.
+Depending on how the locks are assigned to rows, they can be called by specific names. For example, locks placed on individual records in a table are called `Record Locks`. Locks that are placed on a range of rows between two index records, used to prevent other transactions from inserting new records into the range are called `Gap Locks` or `Next-key Locks`. Finally to maintain the integrity of the data and ensure there is no issue while inserting new data, the `Insert-Intention Lock` and `Auto-Inc Locks` may be set by INSERT operations.
 
 ###### RECORD LOCKS
 
@@ -96,11 +96,25 @@ A next-key lock is a combination of a record lock and a gap lock on the gap befo
 
 The difference between a MySQL next-key lock and a gap lock is that a next-key lock covers both a specific record and the gap before it, while a gap lock only covers the gap between two index records.
 
+###### INSERT-INTENTION LOCKS
+
+The Insert Intention Lock signals the plan to insert new data into a table or row. Multiple transactions can insert into the same index-gap without waiting for each other if they insert at different positions within the index-gap, otherwise they prevent other transactions from modifying or inserting new rows until the lock is released.
+
+###### AUTO-INC LOCKS
+
+An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during inserts. If one transaction is inserting, any other transactions must wait until it's done, to ensure that each new row gets consecutive primary key values
+
 #### The `autocommit` setting
 
-By default all user activity occurs inside a transaction. If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit `START TRANSACTION` or `BEGIN` statement and ending it with a `COMMIT` or `ROLLBACK` statement. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
+If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit `START TRANSACTION` or `BEGIN` statement and ending it with a `COMMIT` or `ROLLBACK` statement.
 
-This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all changes to a table do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. From that point onwards, all sql statements are inside a fresh new transaction. As soon as whe finish running all sql statements one can either COMMIT or ROLLBACK.
+This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all changes to a table do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. If autocommit mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has autocommit disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
+
+In summary:
+
+- To use multiple-statement transactions, switch autocommit off with the SQL statement SET autocommit = 0 and end each transaction with COMMIT or ROLLBACK as appropriate.
+
+- To leave autocommit on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
 
 #### Transaction isolation
 
