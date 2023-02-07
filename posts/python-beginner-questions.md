@@ -1,6 +1,6 @@
 ---
 title: "30 Python beginner questions"
-date: "2022-10-27"
+date: "2023-02-07"
 ---
 
 In an attempt to learn a little bit of Python, I was taking notes of some questions that popped into my mind.
