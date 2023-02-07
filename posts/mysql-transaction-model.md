@@ -13,9 +13,9 @@ To have a good understanding of the MySQL Transaction Model some fundamental con
 - The `autocommit` setting
 - Transaction isolation
 
-Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of a transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement. A <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction.
+Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of a transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement. A <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction. Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the [InnoDB Engine][1].
 
-Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the [InnoDB Engine][1].
+There is a distinction between how DML and DDL statements relate to transactions. Data Manipulation Language statements like INSERT, UPDATE, and DELETE (and SELECT ... FOR UPDATE) operate in the context of a transaction, so their effects can be committed or rolled back as a single unit. On the opposite site, Data Definition Language (DDL) statements like CREATE, ALTER, DROP, and TRUNCATE automatically commit inside the transaction; they cannot be rolled back. 
 
 #### Databases Read Phenomena 
 
@@ -134,13 +134,15 @@ The image bellow, taken from [this video][6], helps to summarize which read phen
 
 ![MySQL Isolation Levels](/images/posts/mysql-isolation-levels.png 'MySQL Isolation Levels')
 
+One thing to keep in mind is - the consistent non-locking read (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
+
 ###### READ UNCOMMITTED
 
 Under this isolation level, SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This looseness allows dirty reads.
 
 ###### READ COMMITTED
 
-This isolation level provides *Consistent Nonlocking Reads* which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
+This isolation level provides *Consistent Nonlocking Reads*, for simple SELECT statements, which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
 
 However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Therefore, it does not prevent the non-repeatable read phenomena.
 
@@ -148,7 +150,9 @@ For explicit locking reads, UPDATE statements, and DELETE statements, MySQL only
 
 ###### REPEATABLE READ
 
-This isolation level provides one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent reads within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read phenomena.
+This isolation level also provides *Consistent Nonlocking Reads*, for simple SELECT statements, but with one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent reads within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read phenomena.
+
+![Consistent Nonlocking Reads](images/posts/consistent-nonlocking-reads.png 'Consistent Nonlocking Reads')
 
 For explicit locking reads, UPDATE, and DELETE statements, locking depends on whether the statement uses a unique index with a unique search condition or a range-type search condition. For the former MySQL locks only the index record found, for the latter it locks the index range scanned, using gap locks or next-key locks to block insertions by other sessions into the gaps covered by the range.
 
@@ -174,10 +178,9 @@ As described above being the most strict isolation level, used mostly for specif
 [5]: https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking?rq=1
 [6]: https://www.youtube.com/watch?v=4EajrPgJAk0
 
-
 ## TODO
 
-- Use this as an example:
-    https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
-
-    
+- Work on the following (in order):
+1. https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-reads.html
+2. https://dev.mysql.com/doc/refman/5.7/en/innodb-locks-set.html
+3. https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity

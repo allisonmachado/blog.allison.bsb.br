@@ -1,0 +1,20 @@
+title Consistent Nonlocking Reads
+
+participant Session A
+participant DATABASE
+participant Session B
+
+Session A->DATABASE:START TRANSACTION\n
+Session A->DATABASE:SELECT * FROM t;
+Session A<--DATABASE:<<empty set>>
+Session B->DATABASE:START TRANSACTION\n
+Session B->DATABASE:INSERT INTO t VALUES (1, 2);
+Session A->DATABASE:SELECT * FROM t;
+Session A<--DATABASE:<<empty set>>
+Session B->DATABASE:COMMIT;
+Session A->DATABASE:SELECT * FROM t;
+Session A<--DATABASE:<<empty set>>
+Session A->DATABASE:COMMIT;
+Session A->DATABASE:START TRANSACTION\n
+Session A->DATABASE:SELECT * FROM t;
+Session A<--DATABASE:(1, 2)
