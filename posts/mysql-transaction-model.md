@@ -8,10 +8,11 @@ date: "2023-01-27"
 To have a good understanding of the MySQL Transaction Model some fundamental concepts related to this topic should be mastered in sequence:
 
 - Databases Read Phenomena
-- Write Serializability
+- Transactions Serializability
 - Locking Mechanism
 - The `autocommit` setting
 - Transaction isolation
+- Locking Reads
 
 Transactions control data manipulation statement(s) to ensure they are [Atomic, Consistent, Isolated and Durable][2]. The way to signal the completion of a transaction to the database is by using either a [COMMIT or ROLLBACK][3] statement. A <u>COMMIT</u> statement means that the changes made in the current transaction are made permanent and become visible to other sessions. A <u>ROLLBACK</u> statement, on the other hand, cancels all modifications made by the current transaction. Transactions are implemented by the Database Storage Engine, and in this article all concepts apply for the [InnoDB Engine][1].
 
@@ -27,7 +28,7 @@ In a multi-tenant environment, several transactions may be executing at the same
 
 - **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, if a query is runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
-#### Write Serializability
+#### Transactions Serializability
 
 Serializability refers to the property that ensures that concurrent execution of transactions that write to data result in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described in this article.
 
@@ -161,6 +162,16 @@ By default, MySQL operates in REPEATABLE READ transaction isolation level. In th
 ###### SERIALIZABLE
 
 As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome. It occurs when the execution order transactions causes them to have a different effect than if they were executed in some order.
+
+#### Locking Reads
+
+According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*:
+
+###### SELECT ... LOCK IN SHARE MODE
+
+Sets a shared lock on any rows that are read - hence other sessions can read the rows, but cannot modify them until your transaction commits. If the queried data is being modified by an unfinished transaction, your query waits until that transaction ends and then uses the latest values (because shared locks need to wait the release of exclusive locks). This behavior is illustrated in the following diagram:
+
+![SELECT ... LOCK IN SHARE MODE](images/posts/select-lock-in-share-mode.png 'SELECT ... LOCK IN SHARE MODE')
 
 ## References
 
