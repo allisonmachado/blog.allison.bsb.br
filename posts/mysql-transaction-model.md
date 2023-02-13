@@ -22,30 +22,43 @@ There is a distinction between how DML and DDL statements relate to transactions
 
 In a multi-tenant environment, several transactions may be executing at the same time and accessing the database rows. If the transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
 
-- **Dirty read**: An operation that retrieves unreliable data, data that was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as permanent.
+- **Dirty read**: An operation that retrieves unreliable data, which was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as permanent.
 
 - **Non-repeatable read**: The situation when a query retrieves data, and a later query within the same transaction retrieves what should be the same data, but the queries return different results (changed by another transaction committing in the meantime). This constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
-- **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, if a query is runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the WHERE clause of the query. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
+- **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, when a query runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the query WHERE clause. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
 #### Transactions Serializability
 
-Serializability refers to the property that ensures that concurrent execution of transactions that write to data result in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described in this article.
+Serializability refers to the property that ensures that concurrent execution of transactions that write to the same data result in a state that would be obtained if the transactions were executed serially, in order. This imply that transactions may wait for each other to complete - in order to ensure serializability - through the use of locking mechanisms described in this article.
 
-Transactions that access and modify the same resource (database rows) could lead to incorrect results if not made serializable. Suppose there is a bank with two accounts, A and B, each with a balance of \$100. Two transactions T1 and T2 are executed concurrently, each trying to transfer \$100 from account A to account B if there are enough funds. If these transactions are not executed in a serializable manner, the potential scenario could happen:
+Transactions that access and modify the same resources (database rows) could lead to incorrect results if not made serializable. Consider the following application function that interacts with the database:
+
+```python
+def transfer_funds(conn, source_account, destination_account, amount):
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance FROM accounts WHERE account_id=%s", (source_account,))
+    balance = cursor.fetchone()[0]
+    if balance >= amount:
+        cursor.execute("UPDATE accounts SET balance = balance - %s WHERE account_id=%s", (amount, source_account))
+        cursor.execute("UPDATE accounts SET balance = balance + %s WHERE account_id=%s", (amount, destination_account))
+    conn.commit()
+```
+
+Suppose in the database there are two accounts, A and B, each with a balance of \$100. Two processes T1 and T2 are executed concurrently, each trying to transfer \$100 from account A to account B. If these processes are not executed in a serializable manner, the potential scenario could happen:
 
 1. T1 reads the balance of A (\$100)
 2. T2 reads the balance of A (\$100)
 3. T1 subtracts \$100 from A and adds \$100 to B, making the balances A (\$0) and B (\$200)
 4. T2 subtracts \$100 from A and adds \$100 to B, making the balances A (\$-100) and B (\$300)
 
-In this scenario, both transactions have executed concurrently, interpreting the balance incorrectly, leading to an incorrect final state of the system, where the balance in account A is negative and the total balance of both accounts is $300. To avoid this, serializability would require that one of the transactions wait for the other to complete before executing.
+In this scenario, both processes have executed concurrently, interpreting the balance incorrectly, leading to an incorrect final state of the system, where the balance in account A is negative and the total balance of B is $300. To avoid this, serializability would require that one of the transactions wait for the other to complete before executing.
 
 #### Locking Mechanism
 
-Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is a [SELECT statement with FOR UPDATE or LOCK IN SHARE MODE at the end][4]. If you use FOR UPDATE, rows examined by the query are write-locked until the end of the current transaction. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them.
+Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is a [SELECT statement with <u>FOR UPDATE</u> or <u>LOCK IN SHARE MODE</u> at the end][4]. If you use FOR UPDATE, it reads the latest available data, setting exclusive locks on each row it reads.Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them.
 
-MySQL implements data [row locking][5] in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data, for instance if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.
+MySQL implements data [row locking][5] in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data - if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.
 
 The fundamental types of locks are:
 
@@ -54,7 +67,7 @@ The fundamental types of locks are:
 - Intension Shared (IS)
 - Intension Exclusive (IX)
 
-Intention locks indicate which type of lock (shared or exclusive) a transaction requires later for a row in a table, they show someone is locking a row, or is going to lock a row in the table:
+Intention locks indicate which type of lock (shared or exclusive) a transaction requires later for a row in a table:
 
 - Before a transaction can acquire a (S) lock on a row in a table, it must first acquire an (IS) lock on the table.
 
@@ -79,7 +92,7 @@ If transaction `T1` holds a shared (S) lock on row r, then requests from some di
 
 If a transaction `T1` holds an exclusive (X) lock on row r, a request from some distinct transaction `T2` for a lock of either type on r cannot be granted immediately. Instead, transaction `T2` has to wait for transaction T1 to release its lock on row r.
 
-Depending on how the locks are assigned to rows, they can be called by specific names. For example, locks placed on individual records in a table are called `Record Locks`. Locks that are placed on a range of rows between two index records, used to prevent other transactions from inserting new records into the range are called `Gap Locks` or `Next-key Locks`. Finally to maintain the integrity of the data and ensure there is no issue while inserting new data, the `Insert-Intention Lock` and `Auto-Inc Locks` may be set by INSERT operations.
+Depending on how the locks are assigned to rows, they can be called by specific names. For example, locks placed on individual records in a table are called `Record Locks`. Locks that are placed on a range of rows between two index records, used to prevent other transactions from inserting new records into the range are called `Gap Locks` or `Next-key Locks`. Finally to maintain the integrity of the data and ensure there is no issue while inserting new data, the `Insert-Intention Lock` and `Auto-Inc Locks` are used by INSERT operations.
 
 ###### RECORD LOCKS
 
@@ -99,33 +112,35 @@ The difference between a MySQL next-key lock and a gap lock is that a next-key l
 
 ###### INSERT-INTENTION LOCKS
 
-The Insert Intention Lock signals the plan to insert new data into a table or row. Multiple transactions can insert into the same index-gap without waiting for each other if they insert at different positions within the index-gap, otherwise they prevent other transactions from modifying or inserting new rows until the lock is released.
+The Insert Intention Lock signals the plan to insert new data into a table or row. Multiple transactions can insert into the same index range without waiting for each other if they insert at different positions within the range, otherwise they prevent other transactions from modifying or inserting new rows until the lock is released.
 
 ###### AUTO-INC LOCKS
 
-An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during inserts. If one transaction is inserting, any other transactions must wait until it's done, to ensure that each new row gets consecutive primary key values
+An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during inserts. If one transaction is inserting, any other transactions must wait until it's done, to ensure that each new row gets consecutive primary key values.
 
 #### The `autocommit` setting
 
 If `autocommit` mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with `autocommit` enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has `autocommit` enabled can perform a multiple-statement transaction by starting it with an explicit `START TRANSACTION` or `BEGIN` statement and ending it with a `COMMIT` or `ROLLBACK` statement.
 
-This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all changes to a table do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. If autocommit mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has autocommit disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
+This feature is frequently used for cases where sql scripts need to be executed in production environments. In those cases, `autocommit` is disabled, so all DML statements do not take effect immediately. Using MySQL Workbench as a client, one can disable autocommit in the menu options. If autocommit mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has autocommit disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
 
 In summary:
 
-- To use multiple-statement transactions, switch autocommit off with the SQL statement SET autocommit = 0 and end each transaction with COMMIT or ROLLBACK as appropriate.
+- To use multiple-statement transactions, switch autocommit off with the SQL statement SET autocommit = 0, then end each transaction with COMMIT or ROLLBACK as appropriate.
 
 - To leave autocommit on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
 
 #### Transaction isolation
 
-Transaction isolation is the setting that fine-tunes the balance between performance and reliability, consistency, and reproducibility of results when multiple transactions are making changes and performing queries at the same time.
+In combination with locks, MySQL uses the concept of consistent non-locking reads to provide isolation between transactions: it allows multiple transactions to view consistent data by creating multiple versions of the data for each transaction. This involves maintaining multiple versions of each row in a table and keeping track of which version of a row is visible to each transaction. It prevents the need for locks, but it also requires additional memory and processing logic to maintain the multiple versions of the data.
+
+Considering that concurrent processing takes a hit when transactions need to wait for one another for acquiring locks - transaction isolation is the setting that fine-tunes the balance between performance and consistency of results when multiple transactions are making changes and performing queries at the same time. 
 
 The Databases Read Phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
 
-- To avoid Dirty read use: avoid using the isolation level known as <u>READ COMMITTED</u>.
+- To avoid Dirty read: avoid using the isolation level known as <u>READ COMMITTED</u>.
 
-- To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> levels.
+- To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
 
 - To avoid Phantom reads use: <u>SERIALIZABLE</u> isolation level.
 
@@ -161,7 +176,7 @@ By default, MySQL operates in REPEATABLE READ transaction isolation level. In th
 
 ###### SERIALIZABLE
 
-As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome. It occurs when the execution order transactions causes them to have a different effect than if they were executed in some order.
+As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome.
 
 #### Locking Reads
 
@@ -195,3 +210,4 @@ Sets a shared lock on any rows that are read - hence other sessions can read the
 1. https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-reads.html
 2. https://dev.mysql.com/doc/refman/5.7/en/innodb-locks-set.html
 3. https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
+4. Add the reference to the DDIA about consistent nonlocking read (data versioning).
