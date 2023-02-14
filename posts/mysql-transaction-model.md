@@ -1,6 +1,6 @@
 ---
 title: "MySQL Transaction Model"
-date: "2023-01-27"
+date: "2023-02-14"
 ---
 
 ## Introduction
@@ -232,8 +232,3 @@ When using the SELECT ... LOCK IN SHARE MODE (or the SERIALIZABLE isolation leve
 [7]: https://stackoverflow.com/a/53960539/5874427
 [8]: https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
 [9]: https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/
-
-## TODO
-
-- Work on the following:
-2. https://dev.mysql.com/doc/refman/5.7/en/innodb-locks-set.html
