@@ -169,6 +169,7 @@ For explicit locking reads, UPDATE statements, and DELETE statements, MySQL only
 This isolation level also provides *Consistent Nonlocking Reads*, for simple SELECT statements, but with one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent reads within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read phenomena.
 
 ![Consistent Nonlocking Reads](images/posts/consistent-nonlocking-reads.png 'Consistent Nonlocking Reads')
+*Repeatable Read Isolation Level*
 
 For explicit locking reads, UPDATE, and DELETE statements, locking depends on whether the statement uses a unique index with a unique search condition or a range-type search condition. For the former MySQL locks only the index record found, for the latter it locks the index range scanned, using gap locks or next-key locks to block insertions by other sessions into the gaps covered by the range.
 
@@ -180,13 +181,30 @@ As described above being the most strict isolation level, used mostly for specif
 
 #### Locking Reads
 
-According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*:
+According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*.
+
+Note that *"Locking reads are only possible when autocommit is disabled (either by beginning transaction with START TRANSACTION or by setting autocommit to 0.)"*
 
 ###### SELECT ... LOCK IN SHARE MODE
 
 Sets a shared lock on any rows that are read - hence other sessions can read the rows, but cannot modify them until your transaction commits. If the queried data is being modified by an unfinished transaction, your query waits until that transaction ends and then uses the latest values (because shared locks need to wait the release of exclusive locks). This behavior is illustrated in the following diagram:
 
 ![SELECT ... LOCK IN SHARE MODE](images/posts/select-lock-in-share-mode.png 'SELECT ... LOCK IN SHARE MODE')
+*Repeatable Read Isolation Level*
+
+###### SELECT ... FOR UPDATE
+
+This locks the queried records with an exclusive write lock until the transaction is completed (committed or rolled back): *"other transactions are blocked from updating those rows, from doing SELECT ... LOCK IN SHARE MODE, or from doing SELECT ... FOR UPDATE"*.
+
+![SELECT ... FOR UPDATE](images/posts/select-for-update.png 'SELECT ... FOR UPDATE')
+*Repeatable Read Isolation Level*
+
+###### CONCURRENCY VS CONSISTENCY
+
+Both Locking Read methods described are commonly used to prevent lost updates and write skews - they minimize concurrency for the sake of data consistency and avoid double booking like problems. However it's important to keep in mind that both methods make the transactions behave differently. For example, if two transactions attempt to update the same row at the same time, the first transaction that executes the SELECT FOR UPDATE statement will acquire a lock on the row and the second transaction will be blocked until the first transaction releases the lock. However, if two transactions attempt to update the same row at the same time and both use SELECT IN SHARE MODE, both transactions will be able to read the row and obtain a shared lock, but the first transaction that tries to update the row will succeed and the second transaction will fail with an error. This situation is illustrated in the image bellow:
+
+
+
 
 ## References
 
@@ -196,6 +214,7 @@ Sets a shared lock on any rows that are read - hence other sessions can read the
 * [Stack Overflow - Explicit Locking Read][4]
 * [Stack Overflow - Locking Mechanisms][5]
 * [YouTube - MySQL Isolation Levels][6]
+* [Stack Overflow - Lost update vs Write skew][7]
 
 [1]: https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-transaction-model.html
 [2]: https://www.prisma.io/dataguide/intro/database-glossary#acid
@@ -203,11 +222,11 @@ Sets a shared lock on any rows that are read - hence other sessions can read the
 [4]: https://stackoverflow.com/questions/32827650/mysql-innodb-difference-between-for-update-and-lock-in-share-mode?rq=1
 [5]: https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking?rq=1
 [6]: https://www.youtube.com/watch?v=4EajrPgJAk0
+[7]: https://stackoverflow.com/a/53960539/5874427
 
 ## TODO
 
 - Work on the following (in order):
-1. https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-reads.html
 2. https://dev.mysql.com/doc/refman/5.7/en/innodb-locks-set.html
 3. https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
 4. Add the reference to the DDIA about consistent nonlocking read (data versioning).
