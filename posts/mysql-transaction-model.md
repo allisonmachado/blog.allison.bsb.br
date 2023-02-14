@@ -132,7 +132,7 @@ In summary:
 
 #### Transaction isolation
 
-In combination with locks, MySQL uses the concept of consistent non-locking reads to provide isolation between transactions: it allows multiple transactions to view consistent data by creating multiple versions of the data for each transaction. This involves maintaining multiple versions of each row in a table and keeping track of which version of a row is visible to each transaction. It prevents the need for locks, but it also requires additional memory and processing logic to maintain the multiple versions of the data.
+In combination with locks, MySQL uses the [concept of consistent non-locking reads][9] to provide isolation between transactions: it allows multiple transactions to view consistent data by creating multiple versions of the data for each transaction. This involves maintaining multiple versions of each row in a table and keeping track of which version of a row is visible to each transaction. It prevents the need for locks, but it also requires additional memory and processing logic to maintain the multiple versions of the data.
 
 Considering that concurrent processing takes a hit when transactions need to wait for one another for acquiring locks - transaction isolation is the setting that fine-tunes the balance between performance and consistency of results when multiple transactions are making changes and performing queries at the same time. 
 
@@ -201,10 +201,15 @@ This locks the queried records with an exclusive write lock until the transactio
 
 ###### CONCURRENCY VS CONSISTENCY
 
-Both Locking Read methods described are commonly used to prevent lost updates and write skews - they minimize concurrency for the sake of data consistency and avoid double booking like problems. However it's important to keep in mind that both methods make the transactions behave differently. For example, if two transactions attempt to update the same row at the same time, the first transaction that executes the SELECT FOR UPDATE statement will acquire a lock on the row and the second transaction will be blocked until the first transaction releases the lock. However, if two transactions attempt to update the same row at the same time and both use SELECT IN SHARE MODE, both transactions will be able to read the row and obtain a shared lock, but the first transaction that tries to update the row will succeed and the second transaction will fail with an error. This situation is illustrated in the image bellow:
+Both Locking Read methods described are commonly used to [prevent lost updates and write skews][8] - they minimize concurrency for the sake of data consistency and avoid double booking like problems. However it's important to keep in mind that both methods make the transactions behave differently. For example, if two transactions attempt to update the same row at the same time, the first transaction that executes the SELECT FOR UPDATE statement will acquire a lock on the row and the second transaction will be blocked until the first transaction releases the lock. However, if two transactions attempt to update the same row at the same time and both use SELECT IN SHARE MODE, both transactions will be able to read the row and obtain a shared lock, but the first transaction that tries to update the row will succeed and the second transaction will fail with an error. This situation is illustrated in the images bellow:
 
+![CONSISTENT FOR UPDATE](images/posts/consistent-for-update.png 'CONSISTENT FOR UPDATE')
+*Repeatable Read Isolation Level*
 
+![CONSISTENT LOCK IN SHARE MODE](images/posts/consistent-lock-in-share-mode.png 'CONSISTENT LOCK IN SHARE MODE')
+*Repeatable Read Isolation Level*
 
+When using the SELECT ... LOCK IN SHARE MODE (or the SERIALIZABLE isolation level), transactions can be more prone to deadlock, which occurs when two or more transactions are waiting for each other to release locks. To deal with this situation, it is important to make your application able to handle deadlock exceptions - you can retry the transaction, or try again with a different set of data.
 
 ## References
 
@@ -215,6 +220,8 @@ Both Locking Read methods described are commonly used to prevent lost updates an
 * [Stack Overflow - Locking Mechanisms][5]
 * [YouTube - MySQL Isolation Levels][6]
 * [Stack Overflow - Lost update vs Write skew][7]
+* [Stack Overflow - Database Integrity][8]
+* [Kleppmann, M. (2017). Snapshot isolation and repeatable read. In Designing Data-Intensive Applications. Sebastopol, CA: O'Reilly Media, Inc.][9]
 
 [1]: https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-transaction-model.html
 [2]: https://www.prisma.io/dataguide/intro/database-glossary#acid
@@ -223,10 +230,10 @@ Both Locking Read methods described are commonly used to prevent lost updates an
 [5]: https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking?rq=1
 [6]: https://www.youtube.com/watch?v=4EajrPgJAk0
 [7]: https://stackoverflow.com/a/53960539/5874427
+[8]: https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
+[9]: https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/
 
 ## TODO
 
-- Work on the following (in order):
+- Work on the following:
 2. https://dev.mysql.com/doc/refman/5.7/en/innodb-locks-set.html
-3. https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
-4. Add the reference to the DDIA about consistent nonlocking read (data versioning).
