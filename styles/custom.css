@@ -1,0 +1,23 @@
+pre > code {
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-left: 3px solid #0070f3;
+    color: #666;
+    page-break-inside: avoid;
+    font-family: monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 1.6em;
+    max-width: 100%;
+    overflow: auto;
+    padding: 1em 1.5em;
+    display: block;
+    word-wrap: break-word;
+}
+
+div > blockquote {
+    border-left: 4px solid #d9d9d9; /* Adjust the color and width as desired */
+    margin: 0 0 1em; /* Add some spacing between the blockquote and surrounding content */
+    padding: 0 0 0 1em; /* Indent the text from the left border */
+    font-style: italic; /* Optionally, add italic font style to the blockquote */
+}
