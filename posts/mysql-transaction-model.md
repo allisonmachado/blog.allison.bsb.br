@@ -22,11 +22,11 @@ There is a distinction between how DML and DDL statements relate to transactions
 
 In a multi-tenant environment, several transactions may be executing at the same time and accessing the database rows. If the transactions are not properly isolated from one another, they can interfere with each other and cause read phenomena that may affect the understanding or even the correctness of the retrieved data. Databases can experience several types of read phenomena, including:
 
-- **Dirty read**: An operation that retrieves unreliable data, which was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as permanent.
+> **Dirty read**: An operation that retrieves unreliable data, which was updated by another transaction but not yet committed. The problem is that the read data could be rolled back, or updated further before being committed; then, the transaction doing the dirty read would be using data that was never confirmed as permanent.
 
-- **Non-repeatable read**: The situation when a query retrieves data, and a later query within the same transaction retrieves what should be the same data, but the queries return different results (changed by another transaction committing in the meantime). This constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
+> **Non-repeatable read**: The situation when a query retrieves data, and a later query within the same transaction retrieves what should be the same data, but the queries return different results (changed by another transaction committing in the meantime). This constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
-- **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, when a query runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the query WHERE clause. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
+> **Phantom read**: Similar to the situation above, but in this case, a row may appear in the result set of a query but not in the result set of an earlier query of the same transaction. For example, when a query runs twice within a transaction, and in the meantime, another transaction commits inserting a new row that matches the query WHERE clause. This scenario also constitutes a problem because data should be consistent, with predictable and stable relationships within the same transaction ([ACID compliant][2]).
 
 #### Transactions Serializability
 
@@ -69,9 +69,9 @@ The fundamental types of locks are:
 
 Intention locks indicate which type of lock (shared or exclusive) a transaction requires later for a row in a table:
 
-- Before a transaction can acquire a (S) lock on a row in a table, it must first acquire an (IS) lock on the table.
+> Before a transaction can acquire a (S) lock on a row in a table, it must first acquire an (IS) lock on the table.
 
-- Before a transaction can acquire an (X) on a row in a table, it must first acquire an (IX) lock on the table.
+> Before a transaction can acquire an (X) on a row in a table, it must first acquire an (IX) lock on the table.
 
 A lock is granted to a requesting transaction if it is compatible with existing locks, but not if it conflicts with existing locks already acquired. A transaction waits until the acquired existing lock is released. The following table summarizes the conditions for conflict acquisition:
 
@@ -86,9 +86,9 @@ An example of a transaction trying to acquire a lock is the following:
 
 If transaction `T1` holds a shared (S) lock on row r, then requests from some distinct transaction `T2` for a lock on row r are handled as follows:
 
-- A request by `T2` for an (S) lock can be granted immediately. As a result, both `T1` and `T2` hold an (S) lock on r.
+> A request by `T2` for an (S) lock can be granted immediately. As a result, both `T1` and `T2` hold an (S) lock on r.
 
-- A request by `T2` for an (X) lock cannot be granted immediately.
+> A request by `T2` for an (X) lock cannot be granted immediately.
 
 If a transaction `T1` holds an exclusive (X) lock on row r, a request from some distinct transaction `T2` for a lock of either type on r cannot be granted immediately. Instead, transaction `T2` has to wait for transaction T1 to release its lock on row r.
 
@@ -126,9 +126,9 @@ This feature is frequently used for cases where sql scripts need to be executed 
 
 In summary:
 
-- To use multiple-statement transactions, switch autocommit off with the SQL statement SET autocommit = 0, then end each transaction with COMMIT or ROLLBACK as appropriate.
+> To use multiple-statement transactions, switch autocommit off with the SQL statement SET autocommit = 0, then end each transaction with COMMIT or ROLLBACK as appropriate.
 
-- To leave autocommit on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
+> To leave autocommit on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. Both `COMMIT` and `ROLLBACK` release all locks that were set during the current transaction.
 
 #### Transaction isolation
 
@@ -138,11 +138,11 @@ Considering that concurrent processing takes a hit when transactions need to wai
 
 The Databases Read Phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
 
-- To avoid Dirty read: avoid using the isolation level known as <u>READ COMMITTED</u>.
+> To avoid Dirty read: avoid using the isolation level known as <u>READ COMMITTED</u>.
 
-- To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
+> To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
 
-- To avoid Phantom reads use: <u>SERIALIZABLE</u> isolation level.
+> To avoid Phantom reads use: <u>SERIALIZABLE</u> isolation level.
 
 The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to fail.
 
