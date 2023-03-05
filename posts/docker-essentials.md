@@ -1,15 +1,17 @@
 ---
-title: "Docker essential commands"
+title: "Docker Essentials"
 date: "2021-12-17"
 ---
 
 # Table of Contents
 
-# Introduction
+----
 
-[Running containers][1] is the absolute minimum a developer need to know about docker. Here are a few tips:
+# Running
 
-## Run MySQL and expose it on Port 3306
+[Running containers][1] is the absolute minimum a developer need to know about docker :running: . Here are a few tips:
+
+## Run and interact
 
 Instead of installing a MySQL in your localhost for development purposes, just use Docker to simplify your life:
 
@@ -20,6 +22,11 @@ docker run -p 3306:3306
   --detach mysql:8.0
 ```
 
+By default all containers are created inside the default [Docker Bridge-Network][2] and are assigned IPs on that network.
+
+> - To find the instance internal IP you can [inspect][3] the instance
+> - If you prefer referencing containers by name you can use [docker-compose][6].
+
 If you want to connect to it from another container, you can do so by referencing it's Docker internal IP address:
 
 ```bash
@@ -28,20 +35,19 @@ docker run -it
   mysql -h172.17.0.3 -uroot -p123456
 ```
 
-By default all containers are created inside the default [Docker Bridge-Network][2] and are assigned IPs on that network.
-
-> - To find the instance internal IP you can [inspect][3] the instance
-> - If you prefer referencing containers by name you can use [docker-compose][6].
-
-If you just want to log into your running container, use the [exec][4] command referencing it's name:
+If you just want to *"log into"* your running container, use the [exec][4] command referencing it's name:
 
 ```sh
  docker exec -it mysql-sandbox bash
 ```
 
-## Run a temporary mysql instance
+The command above starts an interactive Bash shell session inside the running Docker container named `mysql-sandbox`.
 
-While containers can create, update, and delete files, those changes are lost when the container is removed and all changes are isolated to that container.  [Volumes][7] provide the ability to connect specific filesystem paths of the container back to the host machine. The mysql docker images use Volumes to keep data persisted across containers restarts. 
+## Docker vs Filesystem
+
+While containers can create, update, and delete files, those changes are lost when the container is removed and all changes are isolated to that container internal file system.  [Volumes][7] provide the ability to connect specific filesystem paths of the container back to the host machine. For example, the MySql Docker image make use of a volume to keep data persisted across containers restarts.
+
+By default, when a container is removed, an associated volume is not automatically removed as well. Those are called a dangling volumes, because they're actually not being used by any active container.
 
 Sometimes its good to have a temporary container (flag `--rm`), those containers do not leave dangling volumes behind:
 
@@ -54,19 +60,9 @@ docker run
   -d mysql:8.0
 ```
 
-When a container is removed, an associated volume is not automatically removed as well. When a volume exists and is no longer connected to any containers, it's called a dangling volume.
+## Filesystem vs Developer
 
-## Run a Bash session
-
-Sometimes its useful to have a Bash session in your favorite Linux distribution to test some commands:
-
-```sh
-docker run -it ubuntu /bin/bash
-```
-
-## Run with an explicit bind-mount
-
-When working on an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/):
+When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer: :
 
 ```sh
 docker run
@@ -74,12 +70,22 @@ docker run
   -it ubuntu /bin/bash
 ```
 
+## Simply Run Bash
+
+Sometimes its useful to have a Bash session in your favorite Linux distribution to test some commands:
+
+```sh
+docker run -it ubuntu /bin/bash
+```
+
 ----
 
 
-# Manage your resources
+# Resource Management
 
 ## Stop and delete containers
+
+When you're working with Docker, you may need to stop and delete containers at various times, for example, to clean up resources or to remove an old container that's no longer needed.
 
 To stop all running containers:
 
@@ -109,19 +115,21 @@ $ docker volume prune
  
 ## Full localhost clean
 
-This command cleans up dangling volumes, networks, stopped containers and all unused images:
+From time to time, you should free up disk space on your Docker host machine by removing resources that are no longer in use. This command removes all stopped containers, unused networks, dangling images, and build cache from your Docker host machine:
 
 ```sh
 docker system prune -a
 ```
 
-
 ----
 
+# Build on the shoulders of giants
 
-# Build what you need
+Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image.
 
-## Build an image providing a name and tag
+I will not elaborate on the contents of the Dockerfile, instead I will describe how the CLI works.
+
+## Build with a Name and Tag
 
 Assuming the `Dockerfile` with build instructions is in the curren directory:
 
@@ -149,11 +157,11 @@ docker image ls --digests
 ----
 
 
-# Quick Backup and Restore
+# Ease Backup and Restore
 
-Messing up a local database installation can happen in a local development environment. There should be a quick way to backup and restore a local database state, right?
+Messing up a local database installation can happen in a local development environment. There should be a quick way to backup and restore a local database state, right? :sunglasses:
 
-> TL;DR - This is accomplished backing up a MySQL container volume and restoring it into another container when desired.
+> TL;DR - This is accomplished backing up a container volume and restoring it into another container when desired.
 
 First determine the target backup volume, you should know which volumes are being used by which containers:
 
@@ -161,7 +169,7 @@ First determine the target backup volume, you should know which volumes are bein
 $ docker inspect mysql-container-name
 ```
 
-After you have found your [MySQL][5] container volume (old_volume), use the following command to backup it:
+After you have found your container volume (old_volume), use the following command to backup it:
 
 ```sh
 $ docker volume create --name new_volume 
@@ -173,7 +181,7 @@ $ docker container run
   alpine ash -c "cd /from ; cp -av . /to"
 ```
 
-Now spin up a new mysql instance based on the volume created:
+Now spin up a new container based on the volume copy:
 
 ```sh
 $ docker run -p 127.0.0.1:3308:3306
@@ -186,9 +194,9 @@ $ docker run -p 127.0.0.1:3308:3306
 ----
 
 
-# Initializing MySQL instance from a logical backup
+# MySQL from logical backup
 
-Use a Dockerfile and the ADD command to insert your schema file into the /docker-entrypoint-initdb.d directory in the Docker container. The will run any files in this directory ending with ".sql":
+Use a Dockerfile and the `ADD` command to insert your schema file into the `/docker-entrypoint-initdb.d` directory in the Docker container. That will run any files in this directory ending with ".sql" when the container first launch:
 
 ```Dockerfile
 FROM mysql:8.0
