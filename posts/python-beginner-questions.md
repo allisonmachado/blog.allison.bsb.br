@@ -1,11 +1,11 @@
 ---
-title: "30 Python beginner questions"
+title: "Python beginner questions"
 date: "2023-02-07"
 ---
 
-In an attempt to learn a little bit of Python, I was taking notes of some questions that popped into my mind.
+In an attempt to learn a little bit of Python :snake:, I was taking notes of some questions that popped into my mind.
 
-Here it is, unfortunately in no particular reasonable order, but still maybe it can help someone else trying to learn the language basics:
+Here they are, unfortunately in no reasonable order, but maybe still helpful :sweat_smile:...
 
 * [How do I create static class variables and methods?][1]
 * [What does the double and single asterisk mean?][2]
@@ -37,6 +37,8 @@ Here it is, unfortunately in no particular reasonable order, but still maybe it 
 * [What are list comprehensions?][28]
 * [What is the Python equivalent for a `case/switch` statement?][29]
 * [How does Python's `super()` work with multiple inheritance?][30]
+* [How to format Python code to follow a consistent style guide][31]
+* [Why do I need to care about WSGI (or ASGI)?][32]
 
 
 [1]: https://stackoverflow.com/questions/68645/static-class-variables-and-methods-in-python
@@ -69,3 +71,5 @@ Here it is, unfortunately in no particular reasonable order, but still maybe it 
 [28]: https://stackoverflow.com/questions/34835951/what-does-list-comprehension-and-similar-mean-how-does-it-work-and-how-can-i
 [29]: https://stackoverflow.com/questions/11479816/what-is-the-python-equivalent-for-a-case-switch-statement
 [30]: https://stackoverflow.com/questions/3277367/how-does-pythons-super-work-with-multiple-inheritance
+[31]: https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
+[32]: https://pt.stackoverflow.com/questions/365419/o-que-seria-wsgi
