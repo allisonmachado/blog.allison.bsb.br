@@ -21,3 +21,11 @@ div > blockquote {
     padding: 0 0 0 1em; /* Indent the text from the left border */
     font-style: italic; /* Optionally, add italic font style to the blockquote */
 }
+
+html {
+    font-size: 13px;
+}
+
+p {
+    font-size: 1.5rem;
+}
