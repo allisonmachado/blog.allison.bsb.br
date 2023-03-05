@@ -63,7 +63,7 @@ $ git reset HEAD~
 https://github.com/MobieTrain/mobietrain-api/compare/{old-branch}...{new-branch}
 ```
 
-## [Alternatives to .gitignore)](https://stackoverflow.com/questions/4287906/something-like-gitignore-but-not-git-ignore)
+## [Alternatives to .gitignore](https://stackoverflow.com/questions/4287906/something-like-gitignore-but-not-git-ignore)
 
 ```bash
 .git/info/exclude (per project basis)

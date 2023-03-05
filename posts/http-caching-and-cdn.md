@@ -5,13 +5,13 @@ date: "2022-08-03"
 
 # Table of Contents
 
-# Introduction
+# Introduction :recycle:
 
-The HTTP caching mechanism allows clients to store a response associated with a request, and reuse the response for subsequent requests.
+> The HTTP caching mechanism allows clients to store a response associated with a request, and reuse the response for subsequent requests. :pencil:
 
-When a server sends a response to a client, it can add headers that determine how the content will be cached by any of the locations participating in the communication:
+When a server sends a response to a client, it can add headers that determine how the content will be cached by any of the entities that may participate in the communication:
 
-* Browser (private from the user perspective)
+* Browser Client (private from the user perspective)
 * Proxy server (shared from the user perspective)
 * CDN / Reverse Proxy Server (shared from the user perspective)
 
@@ -22,7 +22,7 @@ The following terminology is useful for understanding web caching:
 * Stale Content - cached content but already expired and not valid for use
 * Fresh Content - cached and valid content for use
 * Cache Invalidation - the process of removing any stale content from the cache
-* Content Validation - the process of contacting the server to check if a stale cache content is still valid and can still be reused.
+* Content Validation - the process of contacting the server to check if expired cache content is still valid and can still be reused.
 * Origin Server - the source of truth for fresh content
 
 ## Private caches
@@ -31,21 +31,23 @@ A private cache is a cache tied to a specific client — typically a browser cac
 
 `Cache-Control: private`
 
+This header can help to protect sensitive information by ensuring that it is not inadvertently cached or shared with other users. 
+
 ## Shared caches
 
 The shared cache is located between the client and the server and can store responses that can be reused among users. Managed caches are explicitly deployed by service providers to offload the origin server and to deliver content efficiently. Examples include CDNs and Service Workers using the Cache API semantics. 
 
 > Carefully read the CDN documentation of whatever managed-cache mechanism you're using, and ensure you're controlling the cache properly in the ways described by the service documentation.
 
-# Cache Key
+# Cache Key :key:
 
 The way that resources are distinguished from one another is essentially based the request Method and URL like `GET /image/cat.png`
 
-> Take care to not end up with a CDN caching that can be served to someone unauthenticated (because of the match in the method + url) for requests that actually requires authentication.
+> Take care to not end up with a CDN caching that can be served to someone unauthenticated (because of the match in the method + url) for requests that actually requires authentication. :pencil:
 
 The [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) HTTP response header describes the parts of the request message aside from the method and URL that influence the content cache. This can be used to create a cache key that considers more than only request Method and URL. 
 
-# Fresh and Stale based on age
+# Fresh and Stale based on age :underage:
 
 The criterion for determining when a response is fresh and when it is stale is based on age. **In HTTP, age is the time elapsed since the response was generated**. Consider the response:
 
@@ -61,7 +63,7 @@ This response will be available for reuse in response to client requests for one
 
 > The `Expires` header is deprecated and we should use `Cache-control: max-age` for specifying fresh/stale validation. If both are available, `max-age` is defined to be preferred.
 
-# Content Validation
+# Content Validation :white_check_mark:
 
 Stale responses are not immediately discarded. **HTTP has a mechanism to transform a stale response to a fresh one by asking the origin server.** This is called validation, or sometimes, revalidation. The headers `If-Modified-Since` and `If-None-Match` are sent by clients when the content becomes stale locally. This mechanism allows the server to only return a `304 Not Modified` if the content has not changed since the specified time - thus saving bandwidth.
 
@@ -88,11 +90,11 @@ Cache-Control: max-age=3600
 
 When that response becomes stale, the client takes the value of the ETag response header for the cached response, and puts it into the `If-None-Match` request header, to ask the server if the resource has been modified.
 
-# Avoid Caching
+# Avoid Caching :x:
 
-If you do not want a response to be saved for reuse, or If the server does not support conditional cache requests you should make the client access the server every time and always get the latest response.
+If you do not want a response to be saved for reuse, or If the server does not support conditional cache requests, you should make the client access the server every time and always get the latest response.
 
-To ensure that the latest versions of resources will always be transferred, it's common practice to make the default Cache-Control value include no-cache:
+To ensure that the latest versions of resources will always be transferred, it's common practice to make the default `Cache-Control` header value include `no-cache`:
 
 ```
 Cache-Control: no-cache
