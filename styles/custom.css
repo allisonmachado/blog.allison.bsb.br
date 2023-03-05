@@ -29,3 +29,13 @@ html {
 p {
     font-size: 1.5rem;
 }
+
+table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: left;
+}

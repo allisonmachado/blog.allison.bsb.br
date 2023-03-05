@@ -83,7 +83,7 @@ docker run -it ubuntu /bin/bash
 
 # Resource Management
 
-## Stop and delete containers
+## Containers
 
 When you're working with Docker, you may need to stop and delete containers at various times, for example, to clean up resources or to remove an old container that's no longer needed.
 
@@ -99,7 +99,7 @@ To delete the stopped containers:
 docker container prune
 ```
 
-## Remove all unused volumes
+## Volumes
 
 Unused or dangling local volumes are those which are not referenced by any containers. Fist you can list them:
 
@@ -113,7 +113,7 @@ Then, feel free to clean that up:
 $ docker volume prune
 ```
  
-## Full localhost clean
+## System
 
 From time to time, you should free up disk space on your Docker host machine by removing resources that are no longer in use. This command removes all stopped containers, unused networks, dangling images, and build cache from your Docker host machine:
 
