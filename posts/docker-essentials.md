@@ -3,9 +3,13 @@ title: "Docker essential commands"
 date: "2021-12-17"
 ---
 
+# Table of Contents
+
+# Introduction
+
 [Running containers][1] is the absolute minimum a developer need to know about docker. Here are a few tips:
 
-#### Run MySQL and expose it on Port 3306
+## Run MySQL and expose it on Port 3306
 
 Instead of installing a MySQL in your localhost for development purposes, just use Docker to simplify your life:
 
@@ -35,7 +39,7 @@ If you just want to log into your running container, use the [exec][4] command r
  docker exec -it mysql-sandbox bash
 ```
 
-#### Run a temporary mysql instance
+## Run a temporary mysql instance
 
 While containers can create, update, and delete files, those changes are lost when the container is removed and all changes are isolated to that container.  [Volumes][7] provide the ability to connect specific filesystem paths of the container back to the host machine. The mysql docker images use Volumes to keep data persisted across containers restarts. 
 
@@ -52,7 +56,7 @@ docker run
 
 When a container is removed, an associated volume is not automatically removed as well. When a volume exists and is no longer connected to any containers, it's called a dangling volume.
 
-#### Run a Bash session
+## Run a Bash session
 
 Sometimes its useful to have a Bash session in your favorite Linux distribution to test some commands:
 
@@ -60,7 +64,7 @@ Sometimes its useful to have a Bash session in your favorite Linux distribution 
 docker run -it ubuntu /bin/bash
 ```
 
-#### Run with an explicit bind-mount
+## Run with an explicit bind-mount
 
 When working on an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/):
 
@@ -73,9 +77,9 @@ docker run
 ----
 
 
-## Manage your resources
+# Manage your resources
 
-#### Stop and delete containers
+## Stop and delete containers
 
 To stop all running containers:
 
@@ -89,7 +93,7 @@ To delete the stopped containers:
 docker container prune
 ```
 
-#### Remove all unused volumes
+## Remove all unused volumes
 
 Unused or dangling local volumes are those which are not referenced by any containers. Fist you can list them:
 
@@ -103,7 +107,7 @@ Then, feel free to clean that up:
 $ docker volume prune
 ```
  
-#### Full localhost clean
+## Full localhost clean
 
 This command cleans up dangling volumes, networks, stopped containers and all unused images:
 
@@ -115,9 +119,9 @@ docker system prune -a
 ----
 
 
-## Build what you need
+# Build what you need
 
-#### Build an image providing a name and tag
+## Build an image providing a name and tag
 
 Assuming the `Dockerfile` with build instructions is in the curren directory:
 
@@ -145,7 +149,7 @@ docker image ls --digests
 ----
 
 
-## Quick Backup and Restore
+# Quick Backup and Restore
 
 Messing up a local database installation can happen in a local development environment. There should be a quick way to backup and restore a local database state, right?
 
@@ -182,7 +186,7 @@ $ docker run -p 127.0.0.1:3308:3306
 ----
 
 
-## Initializing MySQL instance from a logical backup
+# Initializing MySQL instance from a logical backup
 
 Use a Dockerfile and the ADD command to insert your schema file into the /docker-entrypoint-initdb.d directory in the Docker container. The will run any files in this directory ending with ".sql":
 
@@ -212,7 +216,7 @@ docker run
   -d my-pre-populated-db
 ```
 
-## References
+# References
 
 * [Docker Run Command][1]
 * [Docker Bridge Network][2]

@@ -96,27 +96,27 @@ If a transaction `T1` holds an exclusive (X) lock on row r, a request from some 
 
 Depending on how the locks are assigned to rows, they can be called by specific names. For example, locks placed on individual records in a table are called `Record Locks`. Locks that are placed on a range of rows between two index records, used to prevent other transactions from inserting new records into the range are called `Gap Locks` or `Next-key Locks`. Finally to maintain the integrity of the data and ensure there is no issue while inserting new data, the `Insert-Intention Lock` and `Auto-Inc Locks` are used by INSERT operations.
 
-### RECORD LOCKS
+### `record-locks`
 
 Individual row locks are called record locks. For example, `SELECT c1 FROM t WHERE c1 = 10 FOR UPDATE;` prevents any other transaction from inserting, updating, or deleting rows where the value of t.c1 is 10. 
 
-### GAP LOCKS
+### `gap-locks`
 
 On the opposite, a gap-lock is a lock on a range between records from a query that defines a conditional range filter. For example, SELECT c1 FROM t WHERE c1 BETWEEN 10 and 20 FOR UPDATE prevents other transactions from inserting a value of 12 or 18 into column t.c1 - creating a gap-lock between rows that have c1 among 10 and 20.
 
 A gap-lock taken by one transaction does not prevent another transaction from taking a gap-lock on the same range.  Gap locks can co-exist - they are “purely inhibitive”, which means that their only purpose is to prevent other transactions from inserting to the gap. 
 
-### NEXT-KEY LOCKS
+### `next-key-locks`
 
 A next-key lock is a combination of a record lock and a gap lock on the gap before the index record.
 
 The difference between a MySQL next-key lock and a gap lock is that a next-key lock covers both a specific record and the gap before it, while a gap lock only covers the gap between two index records.
 
-### INSERT-INTENTION LOCKS
+### `insert-intention-locks`
 
 The Insert Intention Lock signals the plan to insert new data into a table or row. Multiple transactions can insert into the same index range without waiting for each other if they insert at different positions within the range, otherwise they prevent other transactions from modifying or inserting new rows until the lock is released.
 
-### AUTO-INC LOCKS
+### `auto-inc-locks`
 
 An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during inserts. If one transaction is inserting, any other transactions must wait until it's done, to ensure that each new row gets consecutive primary key values.
 
@@ -154,11 +154,11 @@ The image bellow, taken from [this video][6], helps to summarize which read phen
 
 One thing to keep in mind is - the consistent non-locking read (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
 
-### READ UNCOMMITTED
+### `read-uncommitted`
 
 Under this isolation level, SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This looseness allows dirty reads.
 
-### READ COMMITTED
+### `read-committed`
 
 This isolation level provides *Consistent Nonlocking Reads*, for simple SELECT statements, which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
 
@@ -166,7 +166,7 @@ However, each consistent read, even within the same transaction, sets and reads 
 
 For explicit locking reads, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
 
-### REPEATABLE READ
+### `repeatable-read`
 
 This isolation level also provides *Consistent Nonlocking Reads*, for simple SELECT statements, but with one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent reads within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read phenomena.
 
@@ -177,7 +177,7 @@ For explicit locking reads, UPDATE, and DELETE statements, locking depends on wh
 
 By default, MySQL operates in REPEATABLE READ transaction isolation level. In this case, MySQL uses next-key locks for searches and index scans, which prevents phantom rows.
 
-### SERIALIZABLE
+### `serializable`
 
 As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE**. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome.
 
@@ -187,21 +187,21 @@ According to the mysql docs: *"If you query data and then insert or update relat
 
 Note that *"Locking reads are only possible when autocommit is disabled (either by beginning transaction with START TRANSACTION or by setting autocommit to 0.)"*
 
-### SELECT ... LOCK IN SHARE MODE
+### `select ... lock in share mode`
 
 Sets a shared lock on any rows that are read - hence other sessions can read the rows, but cannot modify them until your transaction commits. If the queried data is being modified by an unfinished transaction, your query waits until that transaction ends and then uses the latest values (because shared locks need to wait the release of exclusive locks). This behavior is illustrated in the following diagram:
 
 ![SELECT ... LOCK IN SHARE MODE](images/posts/select-lock-in-share-mode.png 'SELECT ... LOCK IN SHARE MODE')
 *Repeatable Read Isolation Level*
 
-### SELECT ... FOR UPDATE
+### `select ... for update`
 
 This locks the queried records with an exclusive write lock until the transaction is completed (committed or rolled back): *"other transactions are blocked from updating those rows, from doing SELECT ... LOCK IN SHARE MODE, or from doing SELECT ... FOR UPDATE"*.
 
 ![SELECT ... FOR UPDATE](images/posts/select-for-update.png 'SELECT ... FOR UPDATE')
 *Repeatable Read Isolation Level*
 
-### CONCURRENCY VS CONSISTENCY
+### Concurrency vs Consistency
 
 Both Locking Read methods described are commonly used to [prevent lost updates and write skews][8] - they minimize concurrency for the sake of data consistency and avoid double booking like problems. However it's important to keep in mind that both methods make the transactions behave differently. For example, if two transactions attempt to update the same row at the same time, the first transaction that executes the SELECT FOR UPDATE statement will acquire a lock on the row and the second transaction will be blocked until the first transaction releases the lock. However, if two transactions attempt to update the same row at the same time and both use SELECT IN SHARE MODE, both transactions will be able to read the row and obtain a shared lock, but the first transaction that tries to update the row will succeed and the second transaction will fail with an error. This situation is illustrated in the images bellow:
 
