@@ -58,7 +58,7 @@ In this scenario, both processes have executed concurrently, interpreting the ba
 
 # Locking Mechanism :unlock:
 
-Let's first stablish the definition of an **explicit locking read**. In this article, an explicit locking read is a [SELECT statement with <u>FOR UPDATE</u> or <u>LOCK IN SHARE MODE</u> at the end][4]. If you use FOR UPDATE, it reads the latest available data, setting exclusive locks on each row it reads. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them. This can be accomplished by the locking mechanism here described.
+Let's first stablish the definition of an *explicit locking read*. In this article, an *explicit locking read* is a [SELECT statement with <u>FOR UPDATE</u> or <u>LOCK IN SHARE MODE</u> at the end][4]. If you use FOR UPDATE, it reads the latest available data, setting exclusive locks on each row it reads. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them. This can be accomplished by the locking mechanism here described.
 
 MySQL implements data [row locking][5] in the form of shared (S) locks and exclusive (X) locks. Locks grant permission to operate on row data - **if a transaction holds a shared lock it can read the row. If a transaction holds an exclusive row lock, it can write to the row.**
 
@@ -154,7 +154,7 @@ The image bellow, taken from [this video][6], helps to summarize which read phen
 
 ![MySQL Isolation Levels](/images/posts/mysql-isolation-levels.png 'MySQL Isolation Levels')
 
-One thing to keep in mind is - the *Consistent Nonlocking Read* (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read (different than an explicit locking read) does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
+One thing to keep in mind is - the *Consistent Nonlocking Read* (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read (different than an *explicit locking read*) does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
 
 ## read-uncommitted
 
@@ -166,7 +166,7 @@ This isolation level provides *Consistent Nonlocking Reads*, for simple SELECT s
 
 However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Therefore, it does not prevent the non-repeatable read phenomena.
 
-For explicit locking reads, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
+For *explicit locking reads*, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
 
 ## repeatable-read
 
@@ -181,13 +181,13 @@ By default, MySQL operates in REPEATABLE READ transaction isolation level. In th
 
 ## serializable
 
-As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE** - meaning that all reads became explicit locking reads. This isolation level has the ability to prevent the transactions Serialization Anomaly - it's a situation in a database where multiple transactions executing concurrently may produce unexpected or incorrect results because the order in which operations are executed affects the outcome.
+As described above being the most strict isolation level, used mostly for specific use cases due to the performance impact on reads, this is similar to <u>REPEATABLE READ</u>, but MySQL implicitly converts all plain SELECT statements to **SELECT ... LOCK IN SHARE MODE** - meaning that all reads became *explicit locking reads*. This isolation level has the ability to prevent the Serialization Anomalies - unexpected or incorrect results happening because of the order in which transactions were executed.
 
-## Locking Reads
+# Explicit Locking Reads :link:
 
-According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*.
+According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*. Be aware that, sometimes the MySQL documentation refers to "explicit locking reads" simply as "locking reads".
 
-Note that *"Locking reads are only possible when autocommit is disabled (either by beginning transaction with START TRANSACTION or by setting autocommit to 0.)"*
+> Explicit locking reads are only possible when autocommit is disabled (either by beginning transaction with START TRANSACTION or by setting autocommit to 0.) :pencil:
 
 ## select ... lock in share mode
 
