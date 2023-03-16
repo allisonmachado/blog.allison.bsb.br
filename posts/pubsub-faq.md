@@ -1,22 +1,32 @@
 ---
 title: "Cloud Pub/Sub FAQ"
-date: "2023-00-00"
+date: "2023-03-17"
 ---
 
 # Table of Contents
+
+# Introduction :bulb:
+
+I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Pub/Sub service. I hope it helps :wink: .
 
 # Disclaimer
 
 This post was used with the help of [ChatGPT][1] and some sentences from the [Cloud Pub/Sub][2] docs are just copied.
 My intent is not to be a professional writer, I just want to condense information in a quick to read and absorb post.
 
-# Introduction :bulb:
-
-I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Pub/Sub service. I hope it helps :wink: .
-
 # What is Cloud Pub/Sub?
 
 Cloud Pub/Sub is a fully-managed messaging service (a type of message broker or message queue) provided by Google Cloud Platform that enables asynchronous communication between systems or microservices at scale, decoupling senders and receivers in a flexible and reliable way.
+
+# What are publishers?
+
+In Google Cloud Pub/Sub, a publisher is an entity that sends messages to a Pub/Sub topic. Messages can be published to a topic either individually or in batches, and publishers can be part of an application or service that generates data or events to be consumed by subscribers.
+
+# What are subscriptions?
+
+In Google Cloud Pub/Sub, a subscription is a named resource representing the stream of messages from a single, specific topic, to be delivered to the subscriber application. 
+
+Subscriptions can be configured with various settings such as acknowledgement deadline, filtering, and flow control to control how messages are delivered to subscribers. A single topic can have multiple subscriptions, but a subscription always point to a single topic.
 
 # What are a few differences between Pub/Sub and Kafka?
 
@@ -29,6 +39,26 @@ In Kafka messages are by default ordered. You can support this requirement in Pu
 Both Kafka and Pubsub have options to configure the maximum message retention time. 
 
 Amazon AWS Kinesis can be thought of as a managed Kafka whereas Pub/Sub can be thought of as a managed version of RabbitMQ on steroids.
+
+# What does `unacked` message mean?
+
+In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged", which refers to messages that have been delivered to a subscriber, but the subscriber has not yet acknowledged the successful processing of the message back to the server.
+
+In other words, after a subscriber receives a message, it needs to process the message and send an acknowledgment back to the server to confirm that it has successfully processed the message. 
+
+Until an acknowledgment is received by the server, the message is considered unacknowledged or `unacked`.
+
+# What does `outstanding` message mean?
+
+In the context of Google Cloud Pub/Sub, an "outstanding" message refers to a message that has been sent to be processed, but has not yet been acknowledged by a subscriber.
+
+In other words, If a message is sent out for delivery and a subscriber is yet to acknowledge it, the message is called outstanding. A message is considered outstanding until the acknowledgment deadline expires or the message is acknowledged.
+
+# Are Pub/Sub servers located in a specific zone or region ?
+
+Pub/Sub servers run in all Google Cloud regions around the world. This allows the service to offer fast, global data access, but also offers users control over where messages are stored. Cloud Pub/Sub provides global data access meaning that publisher and subscriber clients are not aware of the location of the servers to which they connect or how those services route the data internally.
+
+Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Google Cloud data center where data storage is possible. This means that publishers in multiple regions may publish messages to a single topic with low latency. When a subscriber requests messages published to a topic, it connects to the nearest server which aggregates data from all messages published to the topic.
 
 # References :books:
 
