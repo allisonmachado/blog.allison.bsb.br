@@ -60,10 +60,68 @@ Pub/Sub servers run in all Google Cloud regions around the world. This allows th
 
 Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Google Cloud data center where data storage is possible. This means that publishers in multiple regions may publish messages to a single topic with low latency. When a subscriber requests messages published to a topic, it connects to the nearest server which aggregates data from all messages published to the topic.
 
-# References :books:
+# What's the difference between a subscriber and a subscription?
+
+A subscriber is a client application or process that consumes messages from a Pub/Sub topic. A subscription is a named cloud resource that represents the stream of messages from a single, specific topic. A subscription is what allows one or more subscribers to receive messages from that topic.
+
+When a subscriber connects to a subscription from a topic, it receives messages from that topic through the subscription. Each subscription has a unique name and it's possible to have multiple subscriptions associated with the same topic, each with its own set of subscribers.
+
+# How does a subscription message processing work ?
+
+After a message is sent to a subscriber, the subscriber must acknowledge the message. If a message is being processed and a subscriber is yet to acknowledge it, the message is called outstanding.
+
+The subscriber has a configurable, limited amount of time, known as the ackDeadline, to acknowledge the outstanding message. After the deadline passes, the message is no longer considered outstanding, and Pub/Sub attempts to redeliver the message.
+
+Pub/Sub repeatedly attempts to deliver any message that is not yet acknowledged and not outstanding.
+
+# What is a subscription retry policy?
+
+If Pub/Sub attempts to deliver a message but the subscriber can't acknowledge it, Pub/Sub tries to resend the message. How the redelivery attempt should occur is known as the subscription retry policy. This isn't a feature that you can turn on or off. However, you can choose what type of retry policy you want to use.
+
+While trying redelivery, Pub/Sub continues to deliver other messages, even if previous messages received negative acknowledgments (unless, you're leveraging ordered message delivery).
+
+# What are the types of subscription retry policies?
+
+By default, messages are immediately redelivered to the same subscriber client if they are not acknowledged. However, this can cause issues if the conditions preventing the acknowledgment haven't changed, resulting in multiple resends. 
+
+To address this, Pub/Sub offers an exponential backoff policy where progressively longer delays are added between retry attempts, with a maximum delay of 600 seconds.
+
+# What are the subscription types?
+
+There are two subscription types:
+
+- Push subscriptions: Messages are pushed to an https endpoint specified by the subscription.
+
+- Pull subscriptions: The subscriber client initiates requests to a Pub/Sub server to retrieve messages.
+
+If you use pull subscriptions, the subscribers can be of two types:
+
+- Simple pull subscribers.
+- Streaming pull subscribers.
+
+The primary difference between the two mechanisms is that a streaming pull subscriber can receive messages in near-real-time, as soon as they are available in the subscription, while a simple pull subscriber must issue requests periodically to retrieve messages. However, a streaming pull subscriber has higher resource usage and may require additional setup and configuration, whereas a pull subscriber is simpler to implement and can be more cost-effective for low-volume subscriptions.
+
+# In a Push subscription, can I send messages to more than one endpoint?
+
+No. In a push subscription type, you can only specify a single endpoint URL to receive messages. If you need to send messages to multiple endpoints, you will need to create separate push subscriptions for each endpoint. 
+
+Alternatively, you can use pull subscriptions, where you can have multiple subscribers on a sngle subscription.
+
+# Having multiple subscribers on a subscription change message delivery?
+
+The image bellow, from the [Pub/Sub docs][2], exemplifies this scenario:
+
+![MULTIPLE SUBSCRIBERS](images/posts/pubsub-multiple-subscribers.png 'MULTIPLE SUBSCRIBERS')
+*Multiple Subscribers Scenario*
+
+The scenario above illustrates the behavior of a pull subscription type. The first subscription has two subscribers, meaning messages will be load-balanced across them, with each subscriber receiving a subset of the messages. The second subscription has one subscriber that will receive all of the messages. 
+
+In a push subscription type, there can be only one subscriber endpoint, but that doesn't mean messages are only processed one after the other. Unless message ordering is enabled, messages are sent to the registered endpoint as they arrive, and Pub/Sub adjusts the number of concurrent push requests using a slow-start algorithm.
+
 
 * [ChatGPT][1]
 * [Cloud Pub/Sub][2]
+# References :books:
 * [Pub/Sub vs Kafka][3]
 
 [1]: https://chat.openai.com/chat
