@@ -62,6 +62,10 @@ Pub/Sub servers run in all Google Cloud regions around the world. This allows th
 
 Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Google Cloud data center where data storage is possible. This means that publishers in multiple regions may publish messages to a single topic with low latency. When a subscriber requests messages published to a topic, it connects to the nearest server which aggregates data from all messages published to the topic.
 
+## What are some important monitoring aspects to consider when using Pub/Sub?
+
+The Pub/Sub docs states: *"Pub/Sub exports metrics by using Cloud Monitoring, which can help provide visibility into the performance, uptime, and overall health of your applications. You can ensure that your subscribers are keeping up with the flow of messages by monitoring the number of undelivered messages. To monitor undelivered messages, you could create alerts when the timestamp of the oldest unacknowledged message extends beyond a certain threshold. You could also monitor the overall health of the Pub/Sub service itself by monitoring the send request count metric and examining the response codes."*
+
 # Terminology
 
 ## What does *"unacked message"* mean?
@@ -70,7 +74,7 @@ In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged",
 
 In other words, after a subscriber receives a message, it needs to process the message and send an acknowledgment back to the server to confirm that it has successfully processed the message. 
 
-Until an acknowledgment is received by the server, the message is considered unacknowledged or `unacked`.
+Until an acknowledgment is received by the server, the message is considered unacknowledged or "unacked".
 
 ## What does *"outstanding message"* mean?
 
@@ -142,7 +146,7 @@ In a push subscription type, there can be only one subscriber endpoint, but that
 
 ## What happens to messages if we have a topic with no subscription?
 
-The gcp docs states: "Only messages published to the topic after the subscription is created are available to subscriber applications." 
+The Pub/Sub docs states: *"Only messages published to the topic after the subscription is created are available to subscriber applications."*
 
 If you have a topic in Google Cloud Pub/Sub with no active subscriptions, any messages published to that topic will be discarded and not delivered to any subscriber. In other words, Pub/Sub is designed to only deliver messages to active subscribers that have explicitly requested to receive messages from a particular topic. 
 
@@ -161,7 +165,7 @@ The Pub/Sub docs states: *"Pub/Sub begins retaining messages on behalf of a subs
 
 ## What happens to messages that can not be delivered or acknowledged by subscribers?
 
-Pub/Sub persists messages that could not be delivered up to the subscription message retention duration. During that time, you can configure a subscription delivery retry policy. After expiration, or after the max number of delivery attempts, you can configure the forwarding of the *unacked* messages to a dead-letter topic.
+Pub/Sub persists messages that could not be delivered up to the subscription message retention duration. During that time, you can configure a subscription delivery retry policy. After expiration, or after the max number of delivery attempts, you can configure the forwarding of the "unacked" messages to a dead-letter topic.
 
 A dead-letter topic is a subscription property, not a topic property. When you create a topic, you can't specify that the topic is a dead-letter topic. You create or update a subscription and use another topic as a dead-letter topic. 
 
@@ -195,6 +199,29 @@ When you seek to a timestamp, the subscription will start receiving messages tha
 
 On the other hand, when you seek to a snapshot, you reset the cursor of a subscription to a specific snapshot. A snapshot is a point-in-time copy of a subscription's backlog, and it includes all the unacknowledged messages in the subscription at the time the snapshot was created. **When using a snapshot you are not required to enable message retention at a topic level.** A snapshot in Google Cloud Pub/Sub can only include messages up to a maximum retention period of 7 days.
 
+### How does "seeking to a snapshot" work?
+
+Once a subscription snapshot is created, it retains:
+
+All messages that were unacknowledged in the source subscription at the time of the snapshot's creation. 
+Any messages published to the topic thereafter.
+
+One use case is to test subscriber code on known data - creating an isolated subscription for a topic and seeking to a created snapshot to replay the saved messages.
+
+### How does "seeking to a timestamp" work?
+
+In PubSub, after enabling message retention, seeking to a timestamp in a subscription marks every message received by Pub/Sub before that time as acknowledged, and all messages received after that time as unacknowledged - to replay and reprocess previously acknowledged messages in that subscription.
+
+To seek to a timestamp, you must first configure the subscription to retain acknowledged messages. You only need to enable the retain of acknowledged messages if you intend to seek to a timestamp - seeking to a snapshot doesn't require it.
+
+### Can snapshots last forever?
+
+No, snapshots expire and are deleted in the following cases (whichever comes first):
+
+- The snapshot reaches a lifespan of seven days.
+- The oldest unacknowledged message in the snapshot exceeds the message retention duration of 7 days.
+ 
+For example, consider a subscription whose oldest "unacked" message is 3 days old. If a snapshot is created from this subscription, the snapshot -- which will always capture this 3-day-old backlog as long as the snapshot exists -- will expire in 4 days.
 
 * [ChatGPT][1]
 * [Cloud Pub/Sub][2]
