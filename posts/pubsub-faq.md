@@ -7,7 +7,7 @@ date: "2023-03-17"
 
 # Introduction :bulb:
 
-I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Pub/Sub service. I hope it helps :wink: .
+I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Pub/Sub service. I hope it helps me and you :wink: .
 
 # Disclaimer :exclamation:
 
@@ -222,6 +222,28 @@ No, snapshots expire and are deleted in the following cases (whichever comes fir
 - The oldest unacknowledged message in the snapshot exceeds the message retention duration of 7 days.
  
 For example, consider a subscription whose oldest "unacked" message is 3 days old. If a snapshot is created from this subscription, the snapshot -- which will always capture this 3-day-old backlog as long as the snapshot exists -- will expire in 4 days.
+
+# Delivery Expectations
+
+## Are messages always delivered once?
+
+By default, Google Cloud Pub/Sub guarantees messages delivered at least once, **meaning that a message may be delivered multiple times to a subscriber, but it will not be lost**. 
+
+## Can I configure exactly once delivery?
+
+First let's define a duplicate message delivery - it's when a message is resent after a successful acknowledgment or before acknowledgment deadline expiration (while the message is outstanding).
+
+Pub/Sub supports exactly-once delivery, within a cloud region, based on a Pub/Sub's defined unique message ID - which is assigned by the server when the message is published and guaranteed to be unique within the topic.
+
+This is a subscription level option, and when enabled no redelivery occurs while the message is outstanding or once the message has been successfully acknowledged. **Notice that, if an acknowledgment deadline expires, a redelivery might naturally happen and in this case they are considered valid.**
+
+## Can I enable exactly-once delivery for push subscriptions?
+
+No, only the pull subscription type supports exactly-once delivery. While push subscriptions support at-least-once delivery, exactly-once delivery is not supported.
+
+In general, accommodating more-than-once delivery requires your subscriber to be idempotent when processing messages. If your existing subscribers are unable to operate in an idempotent way, then you can incorporate Dataflow to deduplicate messages. 
+
+If your subscribers see a high rate of duplicate messages, this can indicate that they are not properly acknowledging messages, or that your acknowledgment deadline is too short.
 
 * [ChatGPT][1]
 * [Cloud Pub/Sub][2]
