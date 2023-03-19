@@ -14,6 +14,8 @@ I tried, as much as possible, to put the questions in an order that require no p
 This post was used with the help of [ChatGPT][1] and some sentences from the [Cloud Pub/Sub][2] docs are just copied.
 My intent is not to be a professional writer, I just want to condense information in a quick to read and absorb post.
 
+----
+
 # Basics
 
 ## What is Cloud Pub/Sub?
@@ -245,11 +247,61 @@ In general, accommodating more-than-once delivery requires your subscriber to be
 
 If your subscribers see a high rate of duplicate messages, this can indicate that they are not properly acknowledging messages, or that your acknowledgment deadline is too short.
 
+## Are Pub/Sub messages sent in an ordered way?
+
+By default, Pub/Sub delivers each published message at least once for every subscription without ordering guarantees. Alternatively, if messages are published with an ordering key and are in the same region, you can enable message ordering. After you set the message ordering property, the Pub/Sub service delivers messages with the same ordering key and in the order that the Pub/Sub service receives the messages.
+
+# Message Ordering
+
+## Does ordered delivery work with push subscriptions? 
+
+Yes, it works with pull and push.
+
+## Is message ordering a topic or a subscription property?
+
+To receive the messages in order, set the message ordering property at the subscription level. Messages with different ordering keys are not guaranteed to be delivered in order, independent of the publishing time.
+
+After the message ordering property is set, the Pub/Sub service delivers messages with the same ordering key in the order that the Pub/Sub service receives the messages. For example, if a publisher sends two messages with the same ordering key, the Pub/Sub service delivers the oldest message first.
+
+## Does ordering mean a message is not delivered until the previous one is acknowledged?
+
+From my understanding the messages can be delivered simultaneously, but the processing from subscribers are guaranteed to be in order. The processing depends on the subscriber type and in explained in detail on this [post from a google engineer][4]:
+
+1. For pull subscribers *"when using the client libraries, one specifies a user callback that should be run whenever a message is received. The client libraries guarantee that for any given ordering key, the callback is run to completion on messages in the correct order. If the messages are acked within that callback, then it means all computation on a message occurs in order"*.
+
+2. For a push and simple pull subscribers, *"Cloud Pub/Sub allows only one message to be outstanding per ordering key at a time"*.
+
+## Can I have more than one subscriber in a message ordered subscription?
+
+I did not find the docs answering this question explicitly, however my conclusion is that yes we can.
+
+However, in that case, messages with the same ordering key will not be processed in parallel across subscribers. Because of ordered guarantees for a given ordering key, only after the first message is processed the second will be delivered, so on and so forth, regardless of how many subscribers are in the subscription.
+
+## Can you use the Seek feature with message ordering?
+
+Yes. The Pub/Sub docs states: *"When the Pub/Sub service redelivers a message with an ordering key, the Pub/Sub service also redelivers every subsequent message with the same ordering key, including acknowledged messages"*.
+
+## Can I use message ordering with dead-letter?
+
+Yes. The Pub/Sub docs states: *"If you cannot ensure timely acknowledgment of all messages, consider attaching a dead-letter topic to the (ordered) subscription. Order of messages might not be preserved when they are written to the dead-letter topic"*.
+
+I conclude that messages delivered to the dead-letter topic will be considered "acknowledged" and the next messages in the order will keep being sent. So a dead-letter topic might be a way to prevent a locked state where ordered messages are not being delivered because one of them is not being acknowledged.
+
+
+## Can I use message ordering with exactly-once delivery?
+	
+Yes. The Pub/Sub docs states: *"If the acknowledgment deadline expires before an in-order acknowledgment for the delivery, the client will receive a redelivery of message. Due to this, when you use ordering with exactly-once delivery, the client throughput is limited to an order of thousand messages per second."*.
+
+----
+
+# References :books:
+
 * [ChatGPT][1]
 * [Cloud Pub/Sub][2]
-# References :books:
 * [Pub/Sub vs Kafka][3]
+* [Ordered Delivery][4]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/pubsub/docs/overview
 [3]: https://cloud.google.com/pubsub/docs/migrating-from-kafka-to-pubsub
+[4]: https://medium.com/google-cloud/google-cloud-pub-sub-ordered-delivery-1e4181f60bc8
