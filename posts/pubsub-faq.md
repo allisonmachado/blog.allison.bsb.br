@@ -1,6 +1,6 @@
 ---
 title: "Cloud Pub/Sub FAQ"
-date: "2023-03-17"
+date: "2023-03-20"
 ---
 
 # Table of Contents
@@ -16,7 +16,7 @@ My intent is not to be a professional writer, I just want to condense informatio
 
 ----
 
-# Basics
+# Basics :bricks:
 
 ## What is Cloud Pub/Sub?
 
@@ -38,7 +38,7 @@ Pubsub limits messages to 10MB, it's not possible to send a bigger file to a top
 
 In other words, instead of sending the file itself for the target topic, we could publish the reference of the file already uploaded to the object-storage. Then, the subscriber receives the file "url" (or reference) and downloads the file to continue processing.
 
-# System Design
+# System Design :globe_with_meridians:
 
 ## What are a few differences between Pub/Sub and Kafka?
 
@@ -68,7 +68,7 @@ Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Go
 
 The Pub/Sub docs states: *"Pub/Sub exports metrics by using Cloud Monitoring, which can help provide visibility into the performance, uptime, and overall health of your applications. You can ensure that your subscribers are keeping up with the flow of messages by monitoring the number of undelivered messages. To monitor undelivered messages, you could create alerts when the timestamp of the oldest unacknowledged message extends beyond a certain threshold. You could also monitor the overall health of the Pub/Sub service itself by monitoring the send request count metric and examining the response codes."*
 
-# Terminology
+# Terminology :open_book:
 
 ## What does *"unacked message"* mean?
 
@@ -84,7 +84,7 @@ In the context of Google Cloud Pub/Sub, an "outstanding" message refers to a mes
 
 In other words, If a message is sent out for delivery and a subscriber is yet to acknowledge it, the message is called outstanding. A message is considered outstanding until the acknowledgment deadline expires or the message is acknowledged.
 
-# Subscription
+# Subscription :incoming_envelope:
 
 ## What's the difference between a subscriber and a subscription?
 
@@ -144,7 +144,7 @@ The scenario above illustrates the behavior of a pull subscription type. The fir
 
 In a push subscription type, there can be only one subscriber endpoint, but that doesn't mean messages are only processed one after the other. Unless message ordering is enabled, messages are sent to the registered endpoint as they arrive, and Pub/Sub adjusts the number of concurrent push requests using a slow-start algorithm.
 
-# Message Lifecycle
+# Message Lifecycle :recycle:
 
 ## What happens to messages if we have a topic with no subscription?
 
@@ -175,7 +175,7 @@ If a message cannot be processed by a subscriber and is sent to a dead-letter to
 
 In summary: If the Pub/Sub service attempts to deliver a message but the subscriber can't acknowledge it, Pub/Sub can forward the undeliverable message to a dead-letter topic.
 
-# Message Replay
+# Message Replay :movie_camera:
 
 ## Can Pub/Sub replay/resend deleted messages?
 
@@ -225,7 +225,7 @@ No, snapshots expire and are deleted in the following cases (whichever comes fir
  
 For example, consider a subscription whose oldest "unacked" message is 3 days old. If a snapshot is created from this subscription, the snapshot -- which will always capture this 3-day-old backlog as long as the snapshot exists -- will expire in 4 days.
 
-# Delivery Expectations
+# Delivery Expectations :dart:
 
 ## Are messages always delivered once?
 
@@ -251,7 +251,7 @@ If your subscribers see a high rate of duplicate messages, this can indicate tha
 
 By default, Pub/Sub delivers each published message at least once for every subscription without ordering guarantees. Alternatively, if messages are published with an ordering key and are in the same region, you can enable message ordering. After you set the message ordering property, the Pub/Sub service delivers messages with the same ordering key and in the order that the Pub/Sub service receives the messages.
 
-# Message Ordering
+# Message Ordering :chess_pawn:
 
 ## Does ordered delivery work with push subscriptions? 
 
