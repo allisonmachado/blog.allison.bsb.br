@@ -68,6 +68,27 @@ Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Go
 
 The Pub/Sub docs states: *"Pub/Sub exports metrics by using Cloud Monitoring, which can help provide visibility into the performance, uptime, and overall health of your applications. You can ensure that your subscribers are keeping up with the flow of messages by monitoring the number of undelivered messages. To monitor undelivered messages, you could create alerts when the timestamp of the oldest unacknowledged message extends beyond a certain threshold. You could also monitor the overall health of the Pub/Sub service itself by monitoring the send request count metric and examining the response codes."*
 
+## How costly is it to use Pub/Sub?
+
+Pubsub costs are not so simple and depend on some factors:
+
+- Throughput costs:
+Every month, the first 10 GiB of data read and written is free. After that, the price is $40 per TiB of data read and written.
+
+- Message volume costs:
+The data volume of a message is the sum of the sizes of it's attributes and a minimum of 1 KB is assessed for each request. Hence, for messages smaller than 1 KB, it is cheaper to batch multiple messages in a single request.
+
+- Storage costs:
+In summary, retaining acknowledged messages in subscriptions is the most expensive storage mechanism. Topic retention and snapshots can be cost-effective alternatives, as they allow messages to be shared across multiple subscriptions, thereby reducing storage costs. Storage costs $0.27 per GiB per month.
+
+- Egress costs:
+The Pub/Sub docs states: *"You are charged for egress every time a message crosses a region boundary. If you have several subscribers in a region different from the region where messages are stored, you are charged egress fees independently for delivery to each subscriber."* Therefore, if your publishers and subscribers are in the same region there's no need to worry.
+
+As a simplistic estimation, **considering no region boundary crosses, no retention enabled and one message published per second (each with 1KiB of data for simplicity) in a topic with 10 subscriptions** the Total Estimated Cost would be ~ $1 per month:
+
+![PUB/SUB COSTS](images/posts/pubsub-pricing-estimation.png 'PUB/SUB COSTS')
+*Pub/Sub Simple Estimation*
+
 # Terminology :open_book:
 
 ## What does *"unacked message"* mean?
