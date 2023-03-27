@@ -118,8 +118,6 @@ The billing is based on the concept of a billable operation which is an API call
 
 Therefore, if we consider one 1 task being created per second, it would be less than 3 million tasks being pushed per month for a cost of under $2 dollars. Of course the total cost of the system should add the maintenance of the worker processors to handle tasks.
 
-# Monitoring 
-
 ----
 
 # References :books:
@@ -139,3 +137,12 @@ Therefore, if we consider one 1 task being created per second, it would be less 
 [5]: https://cloud.google.com/tasks/docs/comp-tasks-sched
 [6]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling#queue
 [7]: https://cloud.google.com/tasks/pricing
+
+
+----
+
+# TODO :hammer:
+
+- Write about monitoring
+- Write about configuration
+- Use some Pub/Sub questions as inspiration for this post (like can we replay messages?)
