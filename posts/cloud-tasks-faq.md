@@ -31,14 +31,31 @@ Overall, Cloud Tasks can be a valuable tool for managing and executing asynchron
 The Cloud Tasks [documentation][2] states:
 
 1. You create a worker to process the tasks.
+    - HTTP endpoint with a public IP address.
 2. You create a queue.
+    - It can take a few minutes for a newly created queue to be available.
 3. You programmatically asks Cloud Tasks to add a new task.
+    - You specify the service and handler that process the task, and optionally pass task-specific data along to the handler.
 4. The Cloud Tasks service returns an OK to the originating application and saves it to storage.
 6. The worker processes the task.
 7. To complete the sequence, the worker informs the successful processing to the Cloud Tasks service.
 
 ![CLOUD TASKS WORKFLOW](images/posts/cloud-tasks-workflow.png 'CONSISTENT FOR UPDATE')
 [*Cloud Tasks queues with HTTP targets*][3]
+
+## What properties to consider when creating a Queue?
+
+When creating a new queue in Cloud Tasks, there are several properties that you should consider based on your application's needs. Here are some important properties to consider:
+
+- Name: Each queue is a named resource and must have a unique name within the project.
+- Rate limits: You can set a maximum number of dispatches per second and maximum concurrent task dispatches.
+- Retry settings: You can configure how many times Cloud Tasks should retry a failed task, and how long to wait between retries.
+
+By considering these properties when creating a new queue in Cloud Tasks, you can ensure that your tasks are executed efficiently and reliably according to your application's specific needs.
+
+## Can I publish a task while the Queue is paused?
+
+The Cloud Tasks [documentation][2] states: *"If a queue is paused then the system will stop executing the tasks in the queue until it is resumed. Tasks can still be added when the queue is paused."*
 
 # System Design :globe_with_meridians:
 
@@ -52,7 +69,7 @@ In terms of simplicity to use at the Google Cloud ecosystem, I would list the se
 
 Overall, Cloud Tasks is better suited for situations where publishers require more control over the execution of tasks (publishers can specify an endpoint where each message is delivered), while Pub/Sub is designed for scenarios where publishers need to decouple themselves from subscribers and allow for implicit invocation of tasks.
 
-Cloud Tasks provides tools for queue and task management that Pub/Sub does not have, such as scheduling specific delivery times, delivery rate controls and task/message creation deduplication. 
+Cloud Tasks provides tools for queue and task management that Pub/Sub does not have, such as scheduling specific delivery times, delivery rate controls and task/message creation deduplication. Pub/Sub is also more suitable for cases where message [ingestion throughput][6] is high.
 
 For a detailed comparison [check this link][4].
 
@@ -64,19 +81,42 @@ The biggest remark is that Cloud Tasks triggers actions based on how the individ
 
 For a detailed comparison [check this link][5].
 
-## What properties to consider when creating a Queue?
+## How does the code to create a task look like?
 
-When creating a new queue in Cloud Tasks, there are several properties that you should consider based on your application's needs. Here are some important properties to consider:
+```javascript
+const {CloudTasksClient} = require('@google-cloud/tasks');
 
-- Name: Each queue is a named resource and must have a unique name within the project.
-- Rate limits: You can set a maximum number of dispatches per second and maximum concurrent task dispatches.
-- Retry settings: You can configure how many times Cloud Tasks should retry a failed task, and how long to wait between retries.
-- Queue type: ??? TODO
-- Task size limits: ??? TODO
+const client = new CloudTasksClient();
 
-By considering these properties when creating a new queue in Cloud Tasks, you can ensure that your tasks are executed efficiently and reliably according to your application's specific needs.
+async function createHttpTask(project, location, queue) {
+  const parent = client.queuePath(project, location, queue);
 
-## Can I publish a task while the Queue is paused?
+  const task = {
+    httpRequest: {
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      httpMethod: 'POST',
+      url: 'https://my.worker.com/handle',
+    },
+  };
+
+  const [response] = await client.createTask({
+    parent,
+    task,
+  });
+
+  return response;
+}
+```
+
+## How costly is it to use Cloud Tasks?
+
+The [pricing model][7] for the Cloud Tasks service seems to be really simplified and it looks like not tied to how many queues you have. 
+
+The billing is based on the concept of a billable operation which is an API call or push delivery attempt. In general, a million billable operation costs $0.40.
+
+Therefore, if we consider one 1 task being created per second, it would be less than 3 million tasks being pushed per month for a cost of under $2 dollars. Of course the total cost of the system should add the maintenance of the worker processors to handle tasks.
 
 # Monitoring 
 
@@ -89,9 +129,13 @@ By considering these properties when creating a new queue in Cloud Tasks, you ca
 * [Cloud Tasks queues with HTTP targets][3]
 * [Cloud Tasks vs Pub/Sub][4]
 * [Cloud Tasks vs Cloud Scheduler][5]
+* [Queue overload][6]
+* [Pricing Model][7]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/tasks/docs/dual-overview
 [3]: https://cloud.google.com/tasks/docs/dual-overview#http
 [4]: https://cloud.google.com/tasks/docs/comp-pub-sub#detailed-feature-comparison
 [5]: https://cloud.google.com/tasks/docs/comp-tasks-sched
+[6]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling#queue
+[7]: https://cloud.google.com/tasks/pricing
