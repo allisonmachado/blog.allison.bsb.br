@@ -118,6 +118,20 @@ The billing is based on the concept of a billable operation which is an API call
 
 Therefore, if we consider one 1 task being created per second, it would be less than 3 million tasks being pushed per month for a cost of under $2 dollars. Of course the total cost of the system should add the maintenance of the worker processors to handle tasks.
 
+# Configuration :gear:
+
+## Can we control the flow of tasks processing?
+
+Yes, throttling tasks consumption is supported by Cloud Tasks. For example, when creating a queue we can use the --max-concurrent-dispatches parameter to set the maximum number of concurrent tasks that Cloud Tasks allows to be dispatched for this queue. After this threshold has been reached, Cloud Tasks stops dispatching tasks until the number of outstanding requests decreases.
+
+We can also use the --max-dispatches-per-second parameter to set the maximum rate at which tasks are dispatched from this queue. 
+
+A third parameter, max_burst_size, is calculated by the system based on the value you set for max_dispatches_per_second.
+
+## Can we control the retry of unprocessed tasks?
+
+Yes, the Cloud Tasks [documentation][8] states: *"If a task does not complete successfully, then Cloud Tasks will retry the task with exponential backoff according to the parameters you have set. You can specify the maximum number of times to retry failed tasks in the queue, set a time limit for retry attempts, and control the interval between attempts."*
+
 ----
 
 # References :books:
@@ -129,6 +143,7 @@ Therefore, if we consider one 1 task being created per second, it would be less 
 * [Cloud Tasks vs Cloud Scheduler][5]
 * [Queue overload][6]
 * [Pricing Model][7]
+* [Queue configuration][8]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/tasks/docs/dual-overview
@@ -137,12 +152,10 @@ Therefore, if we consider one 1 task being created per second, it would be less 
 [5]: https://cloud.google.com/tasks/docs/comp-tasks-sched
 [6]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling#queue
 [7]: https://cloud.google.com/tasks/pricing
+[8]: https://cloud.google.com/tasks/docs/configuring-queues#rate
 
 
 ----
 
 # TODO :hammer:
-
-- Write about monitoring
-- Write about configuration
 - Use some Pub/Sub questions as inspiration for this post (like can we replay messages?)
