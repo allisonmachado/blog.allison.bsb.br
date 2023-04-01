@@ -26,6 +26,10 @@ Cloud Tasks provides a simple API for creating and managing tasks, and it suppor
 
 Overall, Cloud Tasks can be a valuable tool for managing and executing asynchronous tasks in a scalable and reliable way.
 
+## What are Tasks and Queues?
+
+A task is a unit of work that you want to run, and a queue is a container for a set of related tasks. In Cloud Tasks, queues are used to manage the scheduling and execution of tasks.
+
 ## How to use it?
 
 The Cloud Tasks [documentation][2] states:
@@ -56,6 +60,13 @@ By considering these properties when creating a new queue in Cloud Tasks, you ca
 ## Can I publish a task while the Queue is paused?
 
 The Cloud Tasks [documentation][2] states: *"If a queue is paused then the system will stop executing the tasks in the queue until it is resumed. Tasks can still be added when the queue is paused."*
+
+## How to send a big file using Cloud Tasks?
+
+Cloud Tasks is not designed to handle the transfer of large files directly, it limits messages to 1MB, it's not possible to send a task with a bigger payload. To circumvent this limitation, you cloud indirectly send larger payloads by first storing them in a filesystem or an object-storage (like Cloud Storage or S3).
+
+In other words, instead of sending the file itself in the task, we could create a task with the reference of the file already uploaded to the object-storage. Then, the worker receives the file "url" (or reference) and downloads the file to continue processing.
+
 
 # System Design :globe_with_meridians:
 
@@ -118,6 +129,46 @@ The billing is based on the concept of a billable operation which is an API call
 
 Therefore, if we consider one 1 task being created per second, it would be less than 3 million tasks being pushed per month for a cost of under $2 dollars. Of course the total cost of the system should add the maintenance of the worker processors to handle tasks.
 
+## Should I worry about scalability in terms of Tasks ingestion and processing?
+
+Yes, the Cloud Tasks [documentation][8] states: *"Google's infrastructure is designed to operate elastically at high-scale: most layers can adapt to increased traffic demands up to massive scale. A core design pattern that makes this possible is adaptive layers -- infrastructure components that dynamically re-allocate load based on traffic patterns. This adaptation, however, takes time. Because Cloud Tasks enables very high volumes of traffic to be dispatched, it exposes production risks in situations where traffic can climb faster than the infrastructure can adapt."* Check this link for more details.
+
+## Does Cloud Task support the "fan-out" pattern?
+
+In a fan-out pattern, a "sender" broadcasts a message to multiple "destinations", which can be other applications, services, or devices. Each destination receives a copy of the message and can process it independently, without affecting the processing of other destinations.
+
+This is not built into the Cloud Tasks service like it is in Pub/Sub for instance (multiple subscriptions for a single topic).
+
+The closest we can get to that is by creating multiple tasks for a single message, each of which is processed by a separate worker.
+
+## Are Queue servers located in a specific zone or region?
+
+When you create a Cloud Tasks queue, you can specify the location of the queue by using the `--location` flag in the gcloud command-line tool. The location you choose determines the region in which the queue metadata and task payloads are stored.
+
+Note that the location you choose for your queue can affect the performance and latency of your Tasks. It's important to choose a location that is closest to your services to minimize latency and ensure optimal performance.
+
+## When does Cloud Task delete the received tasks?
+
+...
+
+## What happens to Tasks that can not be delivered to workers?
+
+...
+
+
+## Can I replay Tasks already processed?
+
+...
+
+
+## Can I delete a message that is pending to be processed?
+
+...
+
+## Are Tasks guaranteed to be processed exactly once by workers?
+
+...
+
 # Configuration :gear:
 
 ## Can we control the flow of tasks processing?
@@ -132,6 +183,16 @@ A third parameter, max_burst_size, is calculated by the system based on the valu
 
 Yes, the Cloud Tasks [documentation][8] states: *"If a task does not complete successfully, then Cloud Tasks will retry the task with exponential backoff according to the parameters you have set. You can specify the maximum number of times to retry failed tasks in the queue, set a time limit for retry attempts, and control the interval between attempts."*
 
+## What are some important monitoring aspects to consider when using Cloud Tasks?
+
+Here are some key metrics to keep monitoring and maybe create alerts about:
+
+1. Queue depth: The number of tasks in the queue.
+2. Task attempt count: Count of task attempts broken down by response code.
+3. Task attempt delay: Delay between each scheduled attempt time and actual attempt time in milliseconds.
+
+We can investigate if our workers are keeping up with the flow of tasks by monitoring the numbers above.
+
 ----
 
 # References :books:
@@ -144,6 +205,7 @@ Yes, the Cloud Tasks [documentation][8] states: *"If a task does not complete su
 * [Queue overload][6]
 * [Pricing Model][7]
 * [Queue configuration][8]
+* [Tasks scaling][9]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/tasks/docs/dual-overview
@@ -153,9 +215,6 @@ Yes, the Cloud Tasks [documentation][8] states: *"If a task does not complete su
 [6]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling#queue
 [7]: https://cloud.google.com/tasks/pricing
 [8]: https://cloud.google.com/tasks/docs/configuring-queues#rate
-
+[9]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling
 
 ----
-
-# TODO :hammer:
-- Use some Pub/Sub questions as inspiration for this post (like can we replay messages?)
