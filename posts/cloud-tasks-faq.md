@@ -147,27 +147,50 @@ When you create a Cloud Tasks queue, you can specify the location of the queue b
 
 Note that the location you choose for your queue can affect the performance and latency of your Tasks. It's important to choose a location that is closest to your services to minimize latency and ensure optimal performance.
 
-## When does Cloud Task delete the received tasks?
+## What happens to Tasks that can not be processed by workers?
 
-...
+Tasks cannot be processed, therefore failed, because the worker is unreachable or because it returns a status code not in the 200-299 range.
 
-## What happens to Tasks that can not be delivered to workers?
+There is a time limit for retrying a failed task, measured from when the task was first run. This time limit is set by the `--max-retry-duration` parameter. 
 
-...
+Once the `--max-retry-duration` time has passed and the task has been attempted `--max-attempts` times, **no further attempts will be made and the task will be deleted**.
 
+## Are Tasks processed in order?
+
+No, the Cloud Tasks [documentation][8] states: *"With the exception of tasks scheduled to run in the future, task queues are completely agnostic about execution order. There are no guarantees or best effort attempts made to execute tasks in any particular order. Specifically: there are no guarantees that old tasks will execute unless a queue is completely emptied. A number of common cases exist where newer tasks are executed sooner than older tasks, and the patterns surrounding this can change without notice."*
 
 ## Can I replay Tasks already processed?
 
-...
+Tasks are processed once and after that they're gone from the Queues. 
 
+So it means that, to reprocess a task that has already been processed by a worker in GCP Cloud Tasks, you need to create a new task with the same payload and attributes as the original task.
 
-## Can I delete a message that is pending to be processed?
+## Can I delete a Task that is pending to be processed?
 
-...
+Yes, you can delete a Task that is pending to be processed in GCP Cloud Tasks.
+
+To do so, you need to use the Cloud Tasks API or the Cloud Console to delete the task. The exact steps will depend on which method you choose.
+
+Using the Cloud Tasks API, you can use the `deleteTask` method to delete the task. You will need to provide the name of the task as a parameter. The name should include the project ID, the location of the queue, and the task ID:
+
+```javascript
+  const name = 'projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID'
+
+  const tasksClient = new CloudTasksClient();
+
+  async function callDeleteTask() {
+    const task = {
+      name,
+    };
+
+    const response = await tasksClient.deleteTask(task);
+    console.log(response);
+  }
+```
 
 ## Are Tasks guaranteed to be processed exactly once by workers?
 
-...
+No, the Cloud Tasks [documentation][8] states: *"Cloud Tasks aims for a strict "execute exactly once" semantic. However, in situations where a design trade-off must be made between guaranteed execution and duplicate execution, the service errs on the side of guaranteed execution. As such, a non-zero number of duplicate executions do occur. Developers should take steps to ensure that duplicate execution is not a catastrophic event. In production, more than 99.999% of tasks are executed only once."*
 
 # Configuration :gear:
 
