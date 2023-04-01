@@ -1,6 +1,6 @@
 ---
 title: "Cloud Pub/Sub FAQ"
-date: "2023-03-20"
+date: "2023-04-02"
 ---
 
 # Table of Contents
@@ -73,7 +73,7 @@ The Pub/Sub docs states: *"Pub/Sub exports metrics by using Cloud Monitoring, wh
 Pubsub costs are not so simple and depend on some factors:
 
 - Throughput costs:
-Every month, the first 10 GiB of data read and written is free. After that, the price is $40 per TiB of data read and written.
+Every month, the first 10 GiB of data read and written is free. After that, the price is $40 per TiB of data read/written.
 
 - Message volume costs:
 The data volume of a message is the sum of the sizes of it's attributes and a minimum of 1 KB is assessed for each request. Hence, for messages smaller than 1 KB, it is cheaper to batch multiple messages in a single request.
@@ -96,8 +96,6 @@ As a simplistic estimation, **considering no region boundary crosses, no retenti
 In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged", which refers to messages that have been delivered to a subscriber, but the subscriber has not yet acknowledged the successful processing of the message back to the server.
 
 In other words, after a subscriber receives a message, it needs to process the message and send an acknowledgment back to the server to confirm that it has successfully processed the message. 
-
-Until an acknowledgment is received by the server, the message is considered unacknowledged or "unacked".
 
 ## What does *"outstanding message"* mean?
 
@@ -204,7 +202,7 @@ No, unless you use the PubSub Seek feature.
 
 To seek to a time in the past and replay previously-acknowledged messages, you must first enable message retention on the topic or configure the subscription to retain acknowledged messages. Topic message retention also allows a subscription to replay messages that are published before you created a subscription.
 
-If topic message retention is configured, the unacknowledged message is deleted from the subscription only when its age exceeds the maximum of the topic's and the subscription's retention duration property.
+If topic message retention is configured, the unacknowledged message is deleted from the subscription only when its age exceeds the maximum of the topic's or subscription's retention duration property.
 
 ## How to replay messages?
 
@@ -243,7 +241,7 @@ No, snapshots expire and are deleted in the following cases (whichever comes fir
 
 - The snapshot reaches a lifespan of seven days.
 - The oldest unacknowledged message in the snapshot exceeds the message retention duration of 7 days.
- 
+
 For example, consider a subscription whose oldest "unacked" message is 3 days old. If a snapshot is created from this subscription, the snapshot -- which will always capture this 3-day-old backlog as long as the snapshot exists -- will expire in 4 days.
 
 # Delivery Expectations :dart:
