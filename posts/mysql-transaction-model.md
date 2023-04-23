@@ -88,9 +88,9 @@ Here is an example of a transaction trying to acquire a lock:
 
 If transaction `T1` holds a shared (S) lock on row r, then requests from some distinct transaction `T2` for a lock on row r are handled as follows:
 
-> A request by `T2` for an (S) lock can be granted immediately. As a result, both `T1` and `T2` hold an (S) lock on r.
+> A request by `T2` for an **(S) lock can be granted** immediately. As a result, both `T1` and `T2` hold an (S) lock on r.
 
-> A request by `T2` for an (X) lock cannot be granted immediately.
+> A request by `T2` for an **(X) lock cannot be granted** immediately.
 
 If a transaction `T1` holds an exclusive (X) lock on row r, a request from some distinct transaction `T2` for a lock of either type on r cannot be granted immediately. Instead, transaction `T2` has to wait for transaction T1 to release its lock on row r.
 
@@ -104,7 +104,7 @@ Individual row locks are called record locks. For example, *SELECT c1 FROM t WHE
 
 On the opposite, a gap-lock is a lock on a range between records from a query that defines a conditional range filter. For example, SELECT c1 FROM t WHERE c1 BETWEEN 10 and 20 FOR UPDATE prevents other transactions from inserting a value of 12 or 18 into column t.c1 - creating a gap-lock between rows that have c1 among 10 and 20.
 
-A gap-lock taken by one transaction does not prevent another transaction from taking a gap-lock on the same range.  Gap locks can co-exist - they are “purely inhibitive”, which means that their only purpose is to prevent other transactions from inserting to the gap (see Intension Exclusive (IX) Locks). 
+A gap-lock taken by one transaction does not prevent another transaction from taking a gap-lock on the same range.  Gap locks can co-exist - they are “purely inhibitive”, which means their only purpose is to prevent other transactions from inserting to the gap (see Intension Exclusive (IX) Locks). 
 
 ## next-key-locks
 
@@ -122,9 +122,9 @@ An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during 
 
 # The Auto Commit Setting :gear:
 
-If *autocommit* mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with *autocommit* enabled, so MySQL does a commit after each SQL statement if that statement did not return an error. A session that has *autocommit* enabled can perform a multiple-statement transaction by starting it with an explicit *START TRANSACTION* or *BEGIN* statement and ending it with a *COMMIT* or *ROLLBACK* statement.
+If *autocommit* mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with *autocommit* enabled, so MySQL does a commit after each SQL statement (if that statement did not return an error). A session that has *autocommit* enabled can perform a multiple-statement transaction by starting it with an explicit *START TRANSACTION* or *BEGIN* statement and ending it with a *COMMIT* or *ROLLBACK* statement.
 
-This feature is frequently adjusted when SQL scripts need to be executed in production environments. In those cases, *autocommit* is disabled, so all DML statements do not take effect immediately. Using MySQL Workbench as a client, one can disable *autocommit* in the menu options. If *autocommit* mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has *autocommit* disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
+This feature is frequently used when SQL scripts need to be executed in production environments. In those cases, *autocommit* is disabled, so all DML statements do not take effect immediately. For example, by using MySQL Workbench as a client, one can easily disable *autocommit* in the menu options. If *autocommit* mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has *autocommit* disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
 
 In summary:
 
@@ -136,48 +136,48 @@ Both *COMMIT* and *ROLLBACK* release all locks that were set during the current 
 
 # Transaction Isolation :shield:
 
-In combination with locks, MySQL uses the [concept of consistent non-locking reads][9] to provide isolation between transactions: it allows multiple transactions to view consistent data by creating multiple versions of the data for each transaction. This involves maintaining multiple versions of each row in a table and keeping track of which version of a row is visible to each transaction. It prevents the need for locks, but it also requires additional memory and processing logic to maintain the multiple versions of the data.
+In combination with locking reads, MySQL uses the [concept of consistent non-locking reads][9] to provide isolation between transactions: it allows multiple transactions to view consistent data by creating multiple versions of the data for each transaction. This can be implemented internally by maintaining multiple versions of each row in a table and keeping track of which version of a row is visible to each transaction. It prevents the need for locks, but it also requires additional memory and processing logic to maintain the multiple versions of the data.
 
-Considering that concurrent processing takes a hit when transactions need to wait for one another for acquiring locks - transaction isolation is the setting that fine-tunes the balance between performance and consistency of results when multiple transactions are making changes and performing queries at the same time. 
+> :memo: Considering that concurrent processing takes a hit when transactions need to wait for one another for acquiring locks - transaction isolation is the setting that fine-tunes the balance between performance and consistency of results when multiple transactions are making changes and performing queries at the same time. 
 
 The Databases Read Phenomena can be avoided or minimized by using the appropriate isolation level and locking mechanisms in the database management system.
 
-> To avoid Dirty read: avoid using the isolation level known as <u>READ COMMITTED</u>.
+- To avoid Dirty read: avoid using the isolation level known as <u>READ COMMITTED</u>.
 
-> To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
+- To avoid Non-repeatable read: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
 
-> To avoid Phantom reads use: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
+- To avoid Phantom reads use: use the <u>SERIALIZABLE</u> or <u>REPEATABLE READ</u> isolation levels.
 
-The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished. Any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to fail.
+The isolation level that uses the most conservative locking strategy is <u>SERIALIZABLE</u>. It prevents any other transactions from inserting or changing data that was read by this transaction, until it is finished - any attempt to change data that was committed by another transaction since the start of the current transaction, cause the current transaction to fail.
 
 The image bellow, taken from [this video][6], helps to summarize which read phenomena can happen under which isolation level:
 
 ![MySQL Isolation Levels](/images/posts/mysql-isolation-levels.png 'MySQL Isolation Levels')
 
-One thing to keep in mind is - the *Consistent Nonlocking Read* (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read (different than an *explicit locking read*) does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
+One thing to keep in mind is - the the [consistent non-locking reads][9] (multi-versioning to present to a query a snapshot of the database at a point in time) is the default mode in which MySQL processes SELECT statements in READ COMMITTED and REPEATABLE READ isolation levels. A consistent read (different than an *explicit locking read*) does not set any locks on the tables it accesses, and therefore other sessions are free to modify those tables at the same time a consistent read is being performed on the table. 
 
 ## read-uncommitted
 
-Under this isolation level, SELECT statements are performed in a nonlocking fashion, however such reads are not consistent. This looseness allows dirty reads.
+Under this isolation level, SELECT statements are performed in a nonlocking fashion, however such reads are not consistent (not versioned by storage engine). This looseness allows dirty reads.
 
 ## read-committed
 
-This isolation level provides *Consistent Nonlocking Reads*, for simple SELECT statements, which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
+This isolation level provides [consistent non-locking reads][9], for simple SELECT statements, which means that MySQL internally uses multi-versioning to present a snapshot of the database at a point in time for a query. The query sees the changes made by transactions that committed before that point in time, and no changes made by later or uncommitted transactions - avoiding a dirty read.
 
-However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Therefore, it does not prevent the non-repeatable read phenomena.
+However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Therefore, it does not prevent the non-repeatable read nor phantom read phenomena.
 
-For *explicit locking reads*, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
+In the case of *explicit locking reads*, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
 
 ## repeatable-read
 
-This isolation level also provides *Consistent Nonlocking Reads*, for simple SELECT statements, but with one level of strictness higher than <u>READ COMMITTED</u> - which means that consistent within the same transaction **read the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read phenomena.
+This isolation level also provides [consistent non-locking reads][9], for simple SELECT statements, but with one level of strictness higher than <u>READ COMMITTED</u> - which means that reads within the same transaction **use the snapshot established by the first read** of the transaction. It means it's not only avoiding dirty-reads but also the non-repeatable read and phantom read phenomena.
 
 ![Consistent Nonlocking Reads](images/posts/consistent-nonlocking-reads.png 'Consistent Nonlocking Reads')
-*Repeatable Read Isolation Level*
+*Repeatable Read Isolation Level*.
 
 For explicit locking reads, UPDATE, and DELETE statements, locking depends on whether the statement uses a unique index with a unique search condition or a range-type search condition. For the former MySQL locks only the index record found, for the latter it locks the index range scanned, using gap locks or next-key locks to block insertions by other sessions into the gaps covered by the range.
 
-By default, MySQL operates in REPEATABLE READ transaction isolation level. In this case, MySQL uses next-key locks for searches and index scans, which prevents phantom rows.
+By default, MySQL operates in REPEATABLE READ transaction isolation level. 
 
 ## serializable
 
