@@ -1,0 +1,14 @@
+title HTTP Caching
+
+User->Web Server: Send request
+Web Server->User: Send response with caching headers
+
+alt Response is cached
+    User->Cache: Send request
+    Cache->User: Return cached response
+else Response is not cached
+    User->Cache: Send request
+    Cache->Web Server: Forward request
+    Web Server->Cache: Send response with caching headers
+    Cache->User: Return response
+end

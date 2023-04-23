@@ -15,6 +15,10 @@ When a server sends a response to a client, it can add headers that determine ho
 * Proxy server (shared from the user perspective)
 * CDN / Reverse Proxy Server (shared from the user perspective)
 
+Here's a basic diagram that exemplifies the caching mechanism:
+
+![HTTP CACHING BASICS](images/posts/http-caching-basics.png 'HTTP CACHING BASICS')
+
 ## Terminology
 
 The following terminology is useful for understanding web caching:
