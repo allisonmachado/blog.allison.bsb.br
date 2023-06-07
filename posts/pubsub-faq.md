@@ -44,9 +44,9 @@ In other words, instead of sending the file itself for the target topic, we coul
 
 Pub/Sub is made available as a managed service (which means that a lot of DevOps work is handled for you) while Kafka as an open source software. Pub/Sub initially behaved much like a message queue (e.g. Rabbit MQ) whereas Kafka would be better compared to a streaming log, making it really simple to "replay" messages.
 
-In Kafka, it is up to the consumer to keep track of the offset of the last message it received, and to provide that information in subsequent requests. Pubsub works by the subscribers acknowledging the messages, the server control the lifecycle of the messages and by default deletes acknowledged ones. Pub/Sub also supports message delivery to push endpoints.
+Kafka supports the concept of consumer groups. Consumer groups allow multiple consumers to work together to consume messages from one or more topics. Kafka automatically manages the offset for each consumer in a consumer group. Each consumer in the group is responsible for a subset of the partitions, and Kafka ensures that messages in a partition are consumed by only one consumer within the group (ordered consumption within a partition). Pubsub works by the subscribers acknowledging the messages, the server control the lifecycle of the messages and by default deletes acknowledged ones. Pub/Sub also supports message delivery to push endpoints.
 
-In Kafka messages are by default ordered. You can support this requirement in Pub/Sub using ordering keys. Currently, in Pub/Sub, ordering is guaranteed across messages published in a given region.
+In Kafka messages are by default ordered within a partition. You can support this requirement in Pub/Sub using ordering keys. Currently, in Pub/Sub, ordering is guaranteed across messages published in a given region.
 
 Both Kafka and Pubsub have options to configure the maximum message retention time. 
 
