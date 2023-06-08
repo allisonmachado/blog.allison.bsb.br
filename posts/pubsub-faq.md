@@ -56,6 +56,8 @@ Amazon AWS Kinesis can be thought of as a managed Kafka whereas Pub/Sub can be t
 
 When using Google Cloud Pub/Sub, you don't need to worry about the pubsub service scalability. Pub/Sub can handle millions of messages per second and automatically scales to meet the needs of your application, without any additional configuration required. Additionally, Pub/Sub provides global message routing and replication, which ensures that your messages are delivered reliably and quickly, regardless of where your publishers/subscribers are located.
 
+Even "*Pub/Sub’s [ordered delivery implementation][4] is designed so users do not need to be subject to such limitations. It can scale to billions of keys without subscriber scaling limitations, hot shards or head-of-line blocking.*"
+
 However, you should keep in mind that the cost of using Pub/Sub will increase as you scale up your usage. You should also make sure that your subscriber applications are designed to handle the expected message volume and that you have enough resources available to process incoming messages. But in terms of the underlying Pub/Sub service itself, according to Google it's designed to scale.
 
 ## Are Pub/Sub servers located in a specific zone or region ?
@@ -93,7 +95,7 @@ As a simplistic estimation, **considering no region boundary crosses, no retenti
 
 ## What does *"unacked message"* mean?
 
-In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged", which refers to messages that have been delivered to a subscriber, but the subscriber has not yet acknowledged the successful processing of the message back to the server.
+In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged", which refers to messages that have been delivered to a subscriber, but the subscriber has not acknowledged the successful processing of the message back to the server.
 
 In other words, after a subscriber receives a message, it needs to process the message and send an acknowledgment back to the server to confirm that it has successfully processed the message. 
 
@@ -115,7 +117,7 @@ When a subscriber connects to a subscription from a topic, it receives messages 
 
 After a message is sent to a subscriber, the subscriber must acknowledge the message. If a message is being processed and a subscriber is yet to acknowledge it, the message is called outstanding.
 
-The subscriber has a configurable, limited amount of time, known as the ackDeadline, to acknowledge the outstanding message. After the deadline passes, the message is no longer considered outstanding, and Pub/Sub attempts to redeliver the message.
+The subscriber has a configurable, limited amount of time, known as the acknowledgement deadline (ack-deadline), to acknowledge the outstanding message. After the deadline passes, the message is no longer considered outstanding, and Pub/Sub attempts to redeliver the message.
 
 Pub/Sub repeatedly attempts to deliver any message that is not yet acknowledged and not outstanding.
 
@@ -161,7 +163,7 @@ The image bellow, from the [Pub/Sub docs][2], exemplifies this scenario:
 
 The scenario above illustrates the behavior of a pull subscription type. The first subscription has two subscribers, meaning messages will be load-balanced across them, with each subscriber receiving a subset of the messages. The second subscription has one subscriber that will receive all of the messages. 
 
-In a push subscription type, there can be only one subscriber endpoint, but that doesn't mean messages are only processed one after the other. Unless message ordering is enabled, messages are sent to the registered endpoint as they arrive, and Pub/Sub adjusts the number of concurrent push requests using a slow-start algorithm.
+In a push subscription type, there can be only one subscriber endpoint, but that doesn't mean messages are only processed one after the other. Unless message ordering is enabled, messages are sent to the registered endpoint as they arrive, and Pub/Sub adjusts the number of concurrent push requests using a [slow-start algorithm][5].
 
 # Message Lifecycle :recycle:
 
@@ -216,9 +218,9 @@ Note that, If you seek to a snapshot using a subscription with a filter, the Pub
 
 PubSub Seek to a timestamp feature allows you to reset the subscription's cursor to a specified point in time. This means that you can rewind the subscription to an earlier point in time and receive messages again, including messages that were already acknowledged or unacknowledged.
 
-When you seek to a timestamp, the subscription will start receiving messages that were published after the specified timestamp, **up to a limit of 31 days if message retention was enabled at the topic level**.
+When you seek to a timestamp, the subscription will start receiving messages that were published after the specified timestamp, up to a limit of 31 days if message retention was enabled at the topic level.
 
-On the other hand, when you seek to a snapshot, you reset the cursor of a subscription to a specific snapshot. A snapshot is a point-in-time copy of a subscription's backlog, and it includes all the unacknowledged messages in the subscription at the time the snapshot was created. **When using a snapshot you are not required to enable message retention at a topic level.** A snapshot in Google Cloud Pub/Sub can only include messages up to a maximum retention period of 7 days.
+On the other hand, when you seek to a snapshot, you reset the cursor of a subscription to a specific snapshot. A snapshot is a point-in-time copy of a subscription's backlog, and it includes all the unacknowledged messages in the subscription at the time the snapshot was created. When using a snapshot you are not required to enable message retention at a topic level. A snapshot in Google Cloud Pub/Sub can only include messages up to a maximum retention period of 7 days.
 
 ### How does "seeking to a snapshot" work?
 
@@ -262,7 +264,7 @@ This is a subscription level option, and when enabled no redelivery occurs while
 
 No, only the pull subscription type supports exactly-once delivery. While push subscriptions support at-least-once delivery, exactly-once delivery is not supported.
 
-In general, accommodating more-than-once delivery requires your subscriber to be idempotent when processing messages. If your existing subscribers are unable to operate in an idempotent way, then you can incorporate Dataflow to deduplicate messages. 
+In general, accommodating more-than-once delivery requires your subscriber to be idempotent when processing messages. If your existing subscribers are unable to operate in an idempotent way, then you can incorporate [Dataflow to deduplicate messages][6]. 
 
 If your subscribers see a high rate of duplicate messages, this can indicate that they are not properly acknowledging messages, or that your acknowledgment deadline is too short.
 
@@ -315,12 +317,14 @@ Yes. The Pub/Sub docs states: *"If the acknowledgment deadline expires before an
 
 # References :books:
 
-* [ChatGPT][1]
 * [Cloud Pub/Sub][2]
 * [Pub/Sub vs Kafka][3]
 * [Ordered Delivery][4]
+* [Push Subscriptions][5]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/pubsub/docs/overview
 [3]: https://cloud.google.com/pubsub/docs/migrating-from-kafka-to-pubsub
 [4]: https://medium.com/google-cloud/google-cloud-pub-sub-ordered-delivery-1e4181f60bc8
+[5]: https://cloud.google.com/pubsub/docs/push?hl=en#delivery_rate
+[6]: https://cloud.google.com/blog/products/data-analytics/handling-duplicate-data-in-streaming-pipeline-using-pubsub-dataflow
