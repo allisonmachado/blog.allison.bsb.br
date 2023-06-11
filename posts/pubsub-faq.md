@@ -288,9 +288,9 @@ After the message ordering property is set, the Pub/Sub service delivers message
 
 From my understanding the messages can be delivered simultaneously, but the processing from subscribers are guaranteed to be in order. The processing depends on the subscriber type and in explained in detail on this [post from a google engineer][4]:
 
-1. For pull subscribers *"when using the client libraries, one specifies a user callback that should be run whenever a message is received. The client libraries guarantee that for any given ordering key, the callback is run to completion on messages in the correct order. If the messages are acked within that callback, then it means all computation on a message occurs in order"*.
+1. For streaming-pull subscribers *"when using the client libraries, one specifies a user callback that should be run whenever a message is received. The client libraries guarantee that for any given ordering key, the callback is run to completion on messages in the correct order. If the messages are acknowledged within that callback, then it means all computation on a message occurs in order"*.
 
-2. For a push and simple pull subscribers, *"Cloud Pub/Sub allows only one message to be outstanding per ordering key at a time"*.
+2. For a push and simple pull subscribers, *"Cloud Pub/Sub allows only one message (or list of messages) to be outstanding per ordering key at a time"*.
 
 ## Can I have more than one subscriber in a message ordered subscription?
 
