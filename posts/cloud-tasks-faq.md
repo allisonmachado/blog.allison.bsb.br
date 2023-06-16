@@ -1,13 +1,13 @@
 ---
 title: "Cloud Tasks FAQ"
-date: "2023-05-20"
+date: "2023-06-16"
 ---
 
 # Table of Contents
 
 # Introduction :bulb:
 
-I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Pub/Sub service. I hope it helps me and you :wink: .
+I tried, as much as possible, to put the questions in an order that require no previous knowledge of the Cloud Tasks service. I hope it helps me and you :wink: .
 
 # Disclaimer :exclamation:
 
@@ -24,7 +24,7 @@ Cloud Tasks is a managed asynchronous task execution service provided by Google 
 
 Cloud Tasks provides a simple API for creating and managing tasks, and it supports a variety of execution environments, including Google Cloud Functions, Google Cloud Run, and even third-party systems.
 
-Overall, Cloud Tasks can be a valuable tool for managing and executing asynchronous tasks in a scalable and reliable way.
+Overall, Cloud Tasks can be a valuable tool for managing and executing asynchronous tasks execution.
 
 ## What are Tasks and Queues?
 
@@ -63,7 +63,7 @@ The Cloud Tasks [documentation][2] states: *"If a queue is paused then the syste
 
 ## How to send a big file using Cloud Tasks?
 
-Cloud Tasks is not designed to handle the transfer of large files directly, it limits messages to 1MB, it's not possible to send a task with a bigger payload. To circumvent this limitation, you cloud indirectly send larger payloads by first storing them in a filesystem or an object-storage (like Cloud Storage or S3).
+Cloud Tasks is not designed to handle the transfer of large files directly, it limits messages to 1MB, it's not possible to send a task with a bigger payload. To circumvent this limitation, you could indirectly send larger payloads by first storing them in a filesystem or an object-storage (like Cloud Storage or S3).
 
 In other words, instead of sending the file itself in the task, we could create a task with the reference of the file already uploaded to the object-storage. Then, the worker receives the file "url" (or reference) and downloads the file to continue processing.
 
@@ -76,6 +76,8 @@ In terms of simplicity to use at the Google Cloud ecosystem, I would list the se
 - Cloud Tasks
 - Cloud Pub/Sub
 
+Despite it's simplicity there are some nuances to consider when using the Google Cloud Tasks service. Cloud Tasks is designed for asynchronous work and does not provide strong guarantees around the timing of task delivery, making it unsuitable for interactive applications where a user is waiting for the result. Some typical use cases for Cloud Tasks include delegating potentially slow background operations like database updates to a worker, helping smooth traffic spikes by removing non-user-facing tasks from the main user flow, and scheduling API calls for system integration.
+
 ## How does it differ from Pub/Sub?
 
 Overall, Cloud Tasks is better suited for situations where publishers require more control over the execution of tasks (publishers can specify an endpoint where each message is delivered), while Pub/Sub is designed for scenarios where publishers need to decouple themselves from subscribers and allow for implicit invocation of tasks.
@@ -86,13 +88,13 @@ For a detailed comparison [check this link][4].
 
 ## How does it differ from Cloud Scheduler?
 
-In short, Cloud Tasks is designed for executing background tasks, while Cloud Scheduler is designed for triggering HTTP/S endpoints and executing jobs at a fixed scheduled period.
+In short, Cloud Tasks is designed for executing background tasks, while Cloud Scheduler is designed for triggering HTTP/S endpoints and executing jobs at a fixed interval period.
 
 The biggest remark is that Cloud Tasks triggers actions based on how the individual task object is configured. If the `scheduleTime` field is set, the action is triggered at that time. If the field is not set, the queue processes its tasks in a non-fixed order.
 
 For a detailed comparison [check this link][5].
 
-## How does the code to create a task look like?
+## What the code to create a task look like?
 
 ```javascript
 const {CloudTasksClient} = require('@google-cloud/tasks');
@@ -131,7 +133,7 @@ Therefore, if we consider one 1 task being created per second, it would be less 
 
 ## Should I worry about scalability in terms of Tasks ingestion and processing?
 
-Yes, the Cloud Tasks [documentation][8] states: *"Google's infrastructure is designed to operate elastically at high-scale: most layers can adapt to increased traffic demands up to massive scale. A core design pattern that makes this possible is adaptive layers -- infrastructure components that dynamically re-allocate load based on traffic patterns. This adaptation, however, takes time. Because Cloud Tasks enables very high volumes of traffic to be dispatched, it exposes production risks in situations where traffic can climb faster than the infrastructure can adapt."* Check this link for more details.
+Yes, the Cloud Tasks [documentation][8] states: *"Google's infrastructure is designed to operate elastically at high-scale: most layers can adapt to increased traffic demands up to massive scale. A core design pattern that makes this possible is adaptive layers -- infrastructure components that dynamically re-allocate load based on traffic patterns. This adaptation, however, takes time. Because Cloud Tasks enables very high volumes of traffic to be dispatched, it exposes production risks in situations where traffic can climb faster than the infrastructure can adapt."*
 
 ## Does Cloud Task support the "fan-out" pattern?
 
@@ -155,15 +157,21 @@ There is a time limit for retrying a failed task, measured from when the task wa
 
 Once the `--max-retry-duration` time has passed and the task has been attempted `--max-attempts` times, **no further attempts will be made and the task will be deleted**.
 
-## Are Tasks processed in order?
+## Are Tasks persisted to storage?
 
-No, the Cloud Tasks [documentation][8] states: *"With the exception of tasks scheduled to run in the future, task queues are completely agnostic about execution order. There are no guarantees or best effort attempts made to execute tasks in any particular order. Specifically: there are no guarantees that old tasks will execute unless a queue is completely emptied. A number of common cases exist where newer tasks are executed sooner than older tasks, and the patterns surrounding this can change without notice."*
+When you create a task in Google Cloud Tasks, it is added to a queue, which persists the task until it is successfully executed. Once tasks are added, the queue dispatches them and makes sure they are reliably processed by your workers.
+
+If Cloud Tasks receives a successful response from the task’s target, then the task will be deleted. Otherwise, the task’s schedule_time will be reset to the time that RunTask was called plus the retry delay specified in the queue’s RetryConfig2.
 
 ## Can I replay Tasks already processed?
 
 Tasks are processed once and after that they're gone from the Queues. 
 
 So it means that, to reprocess a task that has already been processed by a worker in GCP Cloud Tasks, you need to create a new task with the same payload and attributes as the original task.
+
+## Are Tasks processed in order?
+
+No, the Cloud Tasks [documentation][8] states: *"With the exception of tasks scheduled to run in the future, task queues are completely agnostic about execution order. There are no guarantees or best effort attempts made to execute tasks in any particular order. Specifically: there are no guarantees that old tasks will execute unless a queue is completely emptied. A number of common cases exist where newer tasks are executed sooner than older tasks, and the patterns surrounding this can change without notice."*
 
 ## Can I delete a Task that is pending to be processed?
 
@@ -216,6 +224,17 @@ Here are some key metrics to keep monitoring and maybe create alerts about:
 
 We can investigate if our workers are keeping up with the flow of tasks by monitoring the numbers above.
 
+## What is the maximum Task retention period?
+
+According to [the documentation][10]:
+
+| Max task retention                       | 31 days  |
+|------------------------------------------|----------|
+| Maximum future schedule time for a task  | 30 days  |
+
+31 days is the time between when a task is added to a queue and when it is automatically deleted.
+30 days is the maximum amount of time in the future that a task can be scheduled.
+
 ----
 
 # References :books:
@@ -229,6 +248,7 @@ We can investigate if our workers are keeping up with the flow of tasks by monit
 * [Pricing Model][7]
 * [Queue configuration][8]
 * [Tasks scaling][9]
+* [Queue quotas][10]
 
 [1]: https://chat.openai.com/chat
 [2]: https://cloud.google.com/tasks/docs/dual-overview
@@ -239,5 +259,6 @@ We can investigate if our workers are keeping up with the flow of tasks by monit
 [7]: https://cloud.google.com/tasks/pricing
 [8]: https://cloud.google.com/tasks/docs/configuring-queues#rate
 [9]: https://cloud.google.com/tasks/docs/manage-cloud-task-scaling
+[10]: https://cloud.google.com/tasks/docs/quotas
 
 ----
