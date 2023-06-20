@@ -1,6 +1,6 @@
 ---
 title: "Cloud Tasks FAQ"
-date: "2023-06-16"
+date: "2023-06-20"
 ---
 
 # Table of Contents
@@ -11,8 +11,8 @@ I tried, as much as possible, to put the questions in an order that require no p
 
 # Disclaimer :exclamation:
 
-This post was used with the help of [ChatGPT][1] and some sentences from the [Cloud Tasks][2] docs are just copied.
-My intent is not to be a professional writer, I just want to condense information in a quick to read and absorb way.
+This post was used with the help of multiple [References](#user-content-references-books), [ChatGPT][1] and the [Cloud Tasks][2] docs.
+A few sentences are just copied from the sources because my intent is not to be a professional writer, I just want to condense information in a quick to read and absorb way.
 
 ----
 
@@ -22,7 +22,7 @@ My intent is not to be a professional writer, I just want to condense informatio
 
 Cloud Tasks is a managed asynchronous task execution service provided by Google Cloud Platform (GCP). It allows you to create and manage tasks that can be executed in the background, either immediately or at a later scheduled time, and at scale.
 
-Cloud Tasks provides a simple API for creating and managing tasks, and it supports a variety of execution environments, including Google Cloud Functions, Google Cloud Run, and even third-party systems.
+Cloud Tasks provides a simple API for creating and managing tasks, and it can integrate with a variety of execution environments, including Google Cloud Functions, Google Cloud Run, and even third-party systems.
 
 Overall, Cloud Tasks can be a valuable tool for managing and executing asynchronous tasks execution.
 
@@ -161,7 +161,7 @@ Once the `--max-retry-duration` time has passed and the task has been attempted 
 
 When you create a task in Google Cloud Tasks, it is added to a queue, which persists the task until it is successfully executed. Once tasks are added, the queue dispatches them and makes sure they are reliably processed by your workers.
 
-If Cloud Tasks receives a successful response from the task’s target, then the task will be deleted. Otherwise, the task’s schedule_time will be reset to the time that RunTask was called plus the retry delay specified in the queue’s RetryConfig2.
+If Cloud Tasks receives a successful response from the task’s target, then the task will be deleted.
 
 ## Can I replay Tasks already processed?
 
@@ -204,11 +204,9 @@ No, the Cloud Tasks [documentation][8] states: *"Cloud Tasks aims for a strict "
 
 ## Can we control the flow of tasks processing?
 
-Yes, throttling tasks consumption is supported by Cloud Tasks. For example, when creating a queue we can use the --max-concurrent-dispatches parameter to set the maximum number of concurrent tasks that Cloud Tasks allows to be dispatched for this queue. After this threshold has been reached, Cloud Tasks stops dispatching tasks until the number of outstanding requests decreases.
+Yes, throttling tasks consumption is supported by Cloud Tasks. For example, when creating a queue we can use the `--max-concurrent-dispatches` parameter to set the maximum number of concurrent tasks that Cloud Tasks allows to be dispatched for this queue. After this threshold has been reached, Cloud Tasks stops dispatching tasks until the number of outstanding requests decreases.
 
-We can also use the --max-dispatches-per-second parameter to set the maximum rate at which tasks are dispatched from this queue. 
-
-A third parameter, max_burst_size, is calculated by the system based on the value you set for max_dispatches_per_second.
+We can also use the `--max-dispatches-per-second` parameter to set the maximum rate at which tasks are dispatched from this queue. 
 
 ## Can we control the retry of unprocessed tasks?
 
