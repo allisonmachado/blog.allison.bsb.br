@@ -7,7 +7,7 @@ date: "2021-12-17"
 
 ----
 
-# Running
+# Running :running:
 
 [Running containers][1] is the absolute minimum a developer need to know about docker :running: . Here are a few tips:
 
@@ -16,10 +16,10 @@ date: "2021-12-17"
 Instead of installing a MySQL in your localhost for development purposes, just use Docker to simplify your life:
 
 ```bash
-docker run -p 3306:3306
-  --name mysql-sandbox
-  --env MYSQL_ROOT_PASSWORD=123456
-  --detach mysql:8.0
+docker run -p 3306:3306 \
+  --name mysql-sandbox \
+  --env MYSQL_ROOT_PASSWORD=123456 \
+  --detach mysql:8.0.34
 ```
 
 By default all containers are created inside the default [Docker Bridge-Network][2] and are assigned IPs on that network.
@@ -30,8 +30,8 @@ By default all containers are created inside the default [Docker Bridge-Network]
 If you want to connect to it from another container, you can do so by referencing it's Docker internal IP address:
 
 ```bash
-docker run -it
-  --rm mysql:8.0
+docker run -it \
+  --rm mysql:8.0 \
   mysql -h172.17.0.3 -uroot -p123456
 ```
 
@@ -43,20 +43,41 @@ If you just want to *"log into"* your running container, use the [exec][4] comma
 
 The command above starts an interactive Bash shell session inside the running Docker container named `mysql-sandbox`.
 
+## Internal Docker Networking
+
+Docker manages networking in a way that allows containers to communicate with each other and the outside world while maintaining isolation by default. There are some network modes that can be used, such as bridge, host, none. The bridge mode is the default, where a new network stack is created for the container on the docker bridge. The host mode allows the container to share the host’s network stack and is useful when the container needs to access network services running on the host itself.
+
+### Bridge Network (default):
+When you run a container without specifying a network, Docker creates a bridge network for it. Bridge networks are isolated from the host network but allow containers within the same network to communicate. Docker assigns a unique IP address to each container within the bridge network.
+
+Docker allows you to map ports on the host to ports in a container. This is essential for allowing external access to services running in containers. For example, if you have a web server in a container listening on port 80, you can map it to port 8080 on the host, allowing you to access it using http://host_ip:8080.
+
+### Host Network:
+When you use --network="host" on a Linux host, it instructs Docker to run the container in the host's network namespace, effectively allowing it to share the same network stack as the host. This means the container can directly access host services on their ports.
+
+Keep in mind that the --network="host" option in Docker is primarily designed for Linux hosts and does not work as expected on macOS or other non-Linux operating systems. 
+
+On macOS, Docker Desktop runs a lightweight Linux VM under the hood to provide a Linux-like environment for Docker containers. However, macOS does not have the same "host" network namespace concept as Linux. When you use --network="host" on macOS, it has no effect on container networking. The container will continue to use its own network namespace, separate from the host's network.
+
+
 ## Docker vs Filesystem
 
-While containers can create, update, and delete files, those changes are lost when the container is removed and all changes are isolated to that container internal file system.  [Volumes][7] provide the ability to connect specific filesystem paths of the container back to the host machine. For example, the MySql Docker image make use of a volume to keep data persisted across containers restarts.
+In a containerized environment, any changes made to the container’s filesystem are lost when the container is terminated and restarted. This is because a container’s filesystem only exists as long as the container does.
+
+However, these changes are not lost if the container is only stopped and not removed. All changes are indeed isolated to that specific container’s internal filesystem.
+
+As for [volumes][7], they provide a way to persist data and share it among containers. They allow specific filesystem paths of the container to be connected back to the host machine, providing more consistent storage that is independent of the container. This is especially important for stateful applications.
 
 By default, when a container is removed, an associated volume is not automatically removed as well. Those are called a dangling volumes, because they're actually not being used by any active container.
 
 Sometimes its good to have a temporary container (flag `--rm`), those containers do not leave dangling volumes behind:
 
 ```sh
-docker run 
-  --rm 
-  -p 3306:3306 
-  --name mysql-sandbox 
-  -e MYSQL_ROOT_PASSWORD=123456
+docker run \
+  --rm \
+  -p 3306:3306 \
+  --name mysql-sandbox \
+  -e MYSQL_ROOT_PASSWORD=123456 \
   -d mysql:8.0
 ```
 
@@ -65,8 +86,8 @@ docker run
 When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer: :
 
 ```sh
-docker run
-  --mount type=bind,source="$(pwd)"/source_file.ext,target=/target_file.ext
+docker run \
+  --mount type=bind,source="$(pwd)"/source_file.ext,target=/target_file.ext \
   -it ubuntu /bin/bash
 ```
 
@@ -81,7 +102,7 @@ docker run -it ubuntu /bin/bash
 ----
 
 
-# Resource Management
+# Resource Management :money_with_wings:
 
 ## Containers
 
@@ -123,7 +144,7 @@ docker system prune -a
 
 ----
 
-# Build on the shoulders of giants
+# Build on the shoulders of giants :european_castle:
 
 Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image.
 
@@ -157,9 +178,9 @@ docker image ls --digests
 ----
 
 
-# Ease Backup and Restore
+# Backup and Restore :dvd:
 
-Messing up a local database installation can happen in a local development environment. There should be a quick way to backup and restore a local database state, right? :sunglasses:
+Messing up with a local database installation can happen in a local development environment, hence there should be a quick way to backup and restore a local database state, right? :sunglasses:
 
 > TL;DR - This is accomplished backing up a container volume and restoring it into another container when desired.
 
@@ -173,28 +194,28 @@ After you have found your container volume (old_volume), use the following comma
 
 ```sh
 $ docker volume create --name new_volume 
-$ docker container run
-  --rm
-  -it
-  -v old_volume:/from
-  -v new_volume:/to
+$ docker container run \
+  --rm \
+  -it \
+  -v old_volume:/from \
+  -v new_volume:/to \
   alpine ash -c "cd /from ; cp -av . /to"
 ```
 
 Now spin up a new container based on the volume copy:
 
 ```sh
-$ docker run -p 127.0.0.1:3308:3306
-  --name mysql-sandbox-copy
-  -v new_volume:/var/lib/mysql
-  -e MYSQL_ROOT_PASSWORD=123456
+$ docker run -p 127.0.0.1:3308:3306 \
+  --name mysql-sandbox-copy \
+  -v new_volume:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=123456 \
   -d mysql:8.0
 ```
 
 ----
 
 
-# MySQL from logical backup
+## MySQL from logical backup
 
 Use a Dockerfile and the `ADD` command to insert your schema file into the `/docker-entrypoint-initdb.d` directory in the Docker container. That will run any files in this directory ending with ".sql" when the container first launch:
 
@@ -217,14 +238,14 @@ docker build . --tag my-pre-populated-db
 Finally, run your database:
 
 ```sh
-docker run 
-  --rm 
-  -p 3306:3306 
-  --name my-pre-populated-container
+docker run  \
+  --rm  \
+  -p 3306:3306  \
+  --name my-pre-populated-container \
   -d my-pre-populated-db
 ```
 
-# References
+# References :books:
 
 * [Docker Run Command][1]
 * [Docker Bridge Network][2]
