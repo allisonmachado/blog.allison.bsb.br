@@ -83,7 +83,8 @@ docker run \
 
 ## Filesystem vs Developer
 
-When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer: :
+When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer:.
+A bind mount is another type of mount, which lets you share a directory from the host's filesystem into the container:
 
 ```sh
 docker run \
@@ -244,6 +245,26 @@ docker run  \
   --name my-pre-populated-container \
   -d my-pre-populated-db
 ```
+
+## MySQL from a physical backup
+
+It's really practical to backup a local database if we use bind mounts. 
+We could simulate a Physical backup, which are taken by directly copying the database files from the storage medium where MySQL data is stored.
+
+First let's run a container like this:
+
+```sh
+docker run -d \
+    --name test-database \
+    -p 127.0.0.1:3306:3306 \
+    -v ~/Workspace/docker-volumes/test-database:/var/lib/mysql mysql:8.0.34
+```
+
+All mysql data will be saved on the host path:
+
+- **~/Workspace/docker-volumes/test-database**
+
+Therefore, it's just a matter of copying the files in the host and zipping them! :package:
 
 # References :books:
 
