@@ -19,7 +19,7 @@ A few sentences are just copied from the sources because my intent is not to be 
 ----
 
 
-# 1. [Static Http Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/static-http-server)
+# 1. [Static Http Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/static-http-server) :cactus:
 
 **A basic http file server configuration...**
 
@@ -42,7 +42,7 @@ http {
 
 This configuration sets up an HTTP server that listens for incoming requests on the default port 80 and serves files from the specified directories. The first location block serves files from `/data/www`, while the second location block serves files from `/data/images` when the URL path begins with `/images/`.
 
-# 2. [Simple Proxy Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/simple-proxy-server)
+# 2. [Simple Proxy Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/simple-proxy-server) :butterfly:
 
 **A minimal reverse proxy config for a node.js application with a path rewrite example...**
 
@@ -72,7 +72,7 @@ In this configuration, Nginx proxies requests to a Node.js application running o
 
 This configuration also includes a path rewriting rule to remove the `/api` prefix from the incoming requests, ensuring that the application receives correct path without this prefix.
 
-# 3. [Named Proxy Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/named-proxy-server)
+# 3. [Named Proxy Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/named-proxy-server)  :pager:
 
 **A reverse proxy example where requests are routed by their host name...**
 
@@ -108,7 +108,7 @@ http
 
 In this configuration, Nginx listens on port 80 and routes requests to different backend services based on the server_name specified in the HTTP host header. Requests with the host name `app.train.local` are directed to a service running on `http://host.docker.internal:9000`, while those with the host name `cms.train.local` are routed to a service running on `http://host.docker.internal:7000`.
 
-# 4. [Load Balancer Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/named-proxy-server)
+# 4. [Load Balancer Server](https://github.com/allisonmachado/nginx-docker-labs/tree/master/named-proxy-server) :spider_web:
 
 **Use Nginx as an HTTP load balancer to distribute traffic to multiple servers...**
 
@@ -137,7 +137,7 @@ http {
 
 Here, we define an upstream group called `stateless_app` that includes multiple backend servers. Nginx load-balances incoming requests across these servers, ensuring efficient distribution of traffic. This configuration uses [round-robin][5] by default.
 
-# Conclusion 
+# Conclusion :speech_balloon:
 
 Nginx is a versatile tool that can be configured to serve various purposes in your web infrastructure. From basic file serving to advanced reverse proxy and load balancing, Nginx plays a significant role in optimizing web application performance and reliability. 
 
