@@ -5,7 +5,7 @@ date: "2022-03-12"
 
 # Table of Contents
 
-# Introduction
+# Introduction :building_construction: 	
 
 
 > *"Logging is a means of tracking events that happen when some software runs. The software’s developer should reason about logging calls to improve software monitoring"* :pencil:
@@ -19,11 +19,11 @@ Logs should inform about the execution and lifecycle of our application in a way
 * Criticality Level
 * Structured Logging
 
-## Frequency :zzz:
+## Frequency :stopwatch:
 
 Too much information can be equivalent to no information. Therefore, it does not make sense to either not send logs or log each and every step of our app. When talking about new implementations, maybe it makes sense to start writing more log statements than usual and, as the feature proves to be stable, some logs could be revisited and updated to have a less important Criticality Levels. As time passes, a good portion of them could even deleted to avoid excessive logging.
 
-## Aggregated Values :euro:
+## Aggregated Values :bucket:
 
 At the same time, think about yourself inspecting the log records in the future and trying to figure out what’s happening. Writing too much aggregated data (runtime variables) to the log records could make it difficult to read and understand them. For example, logging the whole set of variables involved in an operation may not always be the best idea.
 
@@ -39,13 +39,13 @@ Log levels should be used to indicate the urgency to which such message should b
 
 Keep in mind that Criticality Levels could play a big role in reducing the frequency of inspected logs. We may instruct a log analysis tools to only display logs above a specific Criticality Level (or instruct the backend library to only send logs above a specific Criticality Level).
 
-## Structured Logging :gear:
+## Structured Logging :musical_keyboard:
 Since log libraries and log analysts tools are very flexible, we may fall into the trap of not having a common way of writing log calls. This makes logs to be saved in a multitude of formats which ultimately lead to multiple different ways of querying and inspecting them. 
 
 Considering that it is much easier to look at logs when they have a predictable structure over time, the developers working in a project should introduce a tiny wrapper on top of a logging library that enforces a structure while writing the logs (or install a log library that already support this idea).
 
 
-# References
+# References :books:
 
 * [Python Logging Tutorial](https://docs.python.org/3.8/howto/logging.html#logging-basic-tutorial)
 * [12 Factor App - Logs](https://12factor.net/logs)
