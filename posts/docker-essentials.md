@@ -1,5 +1,5 @@
 ---
-title: "Docker Essentials"
+title: "Docker Essentials for Devs"
 date: "2021-12-17"
 ---
 
@@ -31,7 +31,7 @@ If you want to connect to it from another container, you can do so by referencin
 
 ```bash
 docker run -it \
-  --rm mysql:8.0 \
+  --rm mysql:8.0.34 \
   mysql -h172.17.0.3 -uroot -p123456
 ```
 
@@ -43,7 +43,7 @@ If you just want to *"log into"* your running container, use the [exec][4] comma
 
 The command above starts an interactive Bash shell session inside the running Docker container named `mysql-sandbox`.
 
-## Internal Docker Networking
+## Internal vs Networking
 
 Docker manages networking in a way that allows containers to communicate with each other and the outside world while maintaining isolation by default. There are some network modes that can be used, such as bridge, host, none. The bridge mode is the default, where a new network stack is created for the container on the docker bridge. The host mode allows the container to share the host’s network stack and is useful when the container needs to access network services running on the host itself.
 
@@ -55,18 +55,18 @@ Docker allows you to map ports on the host to ports in a container. This is esse
 ### Host Network:
 When you use --network="host" on a Linux host, it instructs Docker to run the container in the host's network namespace, effectively allowing it to share the same network stack as the host. This means the container can directly access host services on their ports.
 
-Keep in mind that the --network="host" option in Docker is primarily designed for Linux hosts and does not work as expected on macOS or other non-Linux operating systems. 
+Keep in mind that the --network="host" option in Docker is primarily designed [for Linux hosts][8] and does not work as expected on macOS or other non-Linux operating systems. 
 
 On macOS, Docker Desktop runs a lightweight Linux VM under the hood to provide a Linux-like environment for Docker containers. However, macOS does not have the same "host" network namespace concept as Linux. When you use --network="host" on macOS, it has no effect on container networking. The container will continue to use its own network namespace, separate from the host's network.
 
 
 ## Docker vs Filesystem
 
-In a containerized environment, any changes made to the container’s filesystem are lost when the container is terminated and restarted. This is because a container’s filesystem only exists as long as the container does.
+In a containerized environment, any changes made to the container’s filesystem are lost when the container is removed. This is because a container’s filesystem only exists as long as the container does.
 
 However, these changes are not lost if the container is only stopped and not removed. All changes are indeed isolated to that specific container’s internal filesystem.
 
-As for [volumes][7], they provide a way to persist data and share it among containers. They allow specific filesystem paths of the container to be connected back to the host machine, providing more consistent storage that is independent of the container. This is especially important for stateful applications.
+As for [volumes][7], they provide a way to persist data and share it among containers. They allow specific filesystem paths of the container to be connected back to the host machine, providing more consistent storage that is **independent of the container**. This is especially important for stateful applications.
 
 By default, when a container is removed, an associated volume is not automatically removed as well. Those are called a dangling volumes, because they're actually not being used by any active container.
 
@@ -78,7 +78,7 @@ docker run \
   -p 3306:3306 \
   --name mysql-sandbox \
   -e MYSQL_ROOT_PASSWORD=123456 \
-  -d mysql:8.0
+  -d mysql:8.0.34
 ```
 
 ## Filesystem vs Developer
@@ -145,7 +145,7 @@ docker system prune -a
 
 ----
 
-# Build on the shoulders of giants :european_castle:
+# Build it rock solid :european_castle:
 
 Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image.
 
@@ -210,7 +210,7 @@ $ docker run -p 127.0.0.1:3308:3306 \
   --name mysql-sandbox-copy \
   -v new_volume:/var/lib/mysql \
   -e MYSQL_ROOT_PASSWORD=123456 \
-  -d mysql:8.0
+  -d mysql:8.0.34
 ```
 
 ----
@@ -218,10 +218,10 @@ $ docker run -p 127.0.0.1:3308:3306 \
 
 ## MySQL from logical backup
 
-Use a Dockerfile and the `ADD` command to insert your schema file into the `/docker-entrypoint-initdb.d` directory in the Docker container. That will run any files in this directory ending with ".sql" when the container first launch:
+Use a Dockerfile and the `ADD` command to insert your [schema file][9] into the `/docker-entrypoint-initdb.d` directory in the Docker container. That will run any files in this directory ending with ".sql" when the container first launch:
 
 ```Dockerfile
-FROM mysql:8.0
+FROM mysql:8.0.34
 
 ENV MYSQL_ROOT_PASSWORD=123456
 
@@ -249,7 +249,7 @@ docker run  \
 ## MySQL from a physical backup
 
 It's really practical to backup a local database if we use bind mounts. 
-We could simulate a Physical backup, which are taken by directly copying the database files from the storage medium where MySQL data is stored.
+We could simulate a [physical backup][9], which are taken by directly copying the database files from the storage medium where MySQL data is stored.
 
 First let's run a container like this:
 
@@ -275,6 +275,8 @@ Therefore, it's just a matter of copying the files in the host and zipping them!
 * [MySQL Docker Hub][5]
 * [Docker Compose][6]
 * [Docker Volume Types][7]
+* [Linux Docker Engine][8]
+* [Backup types][9]
 
 [1]: https://docs.docker.com/engine/reference/run/
 [2]: https://docs.docker.com/network/bridge/
@@ -283,3 +285,5 @@ Therefore, it's just a matter of copying the files in the host and zipping them!
 [5]: https://hub.docker.com/_/mysql
 [6]: https://docs.docker.com/compose/
 [7]: https://stackoverflow.com/questions/47150829/what-is-the-difference-between-binding-mounts-and-volumes-while-handling-persist
+[8]: https://docs.docker.com/engine/install/ubuntu/
+[9]: https://dev.mysql.com/doc/refman/8.0/en/backup-types.html
