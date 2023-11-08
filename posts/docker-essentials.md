@@ -84,13 +84,26 @@ docker run \
 ## Filesystem vs Developer
 
 When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer:.
-A bind mount is another type of mount, which lets you share a directory from the host's filesystem into the container:
+
+A bind mount is another type of volume, which lets you share a directory from the host's filesystem into the container. A bind mount is created when you provide a source path on the host machine in the command-line interface (CLI). This can be done using either the -v or --mount flags.
+
+For example, with the -v flag, the syntax would look like this: 
 
 ```sh
-docker run \
-  --mount type=bind,source="$(pwd)"/source_file.ext,target=/target_file.ext \
-  -it ubuntu /bin/bash
+docker run -v /path/on/host:/path/in/container my-container
 ```
+
+Here, `/path/on/host` is the path to the file or directory on the host machine, and `/path/in/container` is the path where the file or directory is mounted in the container.
+
+Similarly, with the --mount flag, the syntax would be: 
+
+```sh
+docker run --mount type=bind,src=/path/on/host,target=/path/in/container my-container
+```
+
+In this case, src is the path to the file or directory on the host machine, and target is the path where the file or directory is mounted in the container.
+
+Any changes to the files in a bind mounted directory on the host machine are immediately available within the container.
 
 ## Simply Run Bash
 
