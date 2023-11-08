@@ -1,14 +1,15 @@
 title HTTP Caching
 
-User->Web Server: Send request
-Web Server->User: Send response with caching headers
+participant "Browser Client\n(User)" as User
+participant "Cache\n(Proxies, CDN...)" as Cache
+participant "Origin\n(Web Server)" as Origin
 
 alt Response is cached
-    User->Cache: Send request
+    User->Cache: Request resource
     Cache->User: Return cached response
 else Response is not cached
-    User->Cache: Send request
-    Cache->Web Server: Forward request
-    Web Server->Cache: Send response with caching headers
+    User->Cache: Request resource
+    Cache->Origin: Forward request
+    Origin->Cache: Send response with caching headers
     Cache->User: Return response
 end

@@ -5,7 +5,7 @@ date: "2022-08-03"
 
 # Table of Contents
 
-# Introduction :recycle:
+# Introduction :building_construction:
 
 > The HTTP caching mechanism allows clients to store a response associated with a request, and reuse the response for subsequent requests. :pencil:
 
@@ -31,11 +31,11 @@ The following terminology is useful for understanding web caching:
 
 ## Private caches
 
-A private cache is a cache tied to a specific client — typically a browser cache. If a response contains personalized content to a specific user and you want to store the response only in the private cache, the server should respond with a private directive:
+A private cache is a cache tied to a specific client — typically a browser cache. If a response contains personalized content to a specific user and you want to store the response only in the private cache, the server should respond with a "private" directive:
 
 `Cache-Control: private`
 
-This header can help to protect sensitive information by ensuring that it is not inadvertently cached or shared with other users. 
+This header can help protect sensitive information by ensuring that it is not inadvertently cached or shared with other users. 
 
 ## Shared caches
 

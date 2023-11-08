@@ -5,7 +5,7 @@ date: "2022-03-12"
 
 # Table of Contents
 
-# Introduction :building_construction: 	
+# Introduction :building_construction:
 
 
 > *"Logging is a means of tracking events that happen when some software runs. The software’s developer should reason about logging calls to improve software monitoring"* :pencil:
