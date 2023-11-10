@@ -132,13 +132,13 @@ An AUTO-INC lock is a lock placed on a table with AUTO_INCREMENT columns during 
 
 If *autocommit* mode is enabled, each SQL statement forms a single transaction on its own. By default, MySQL starts the session for each new connection with *autocommit* enabled, so MySQL does a commit after each SQL statement (if that statement did not return an error). A session that has *autocommit* enabled can perform a multiple-statement transaction by starting it with an explicit *START TRANSACTION* or *BEGIN* statement and ending it with a *COMMIT* or *ROLLBACK* statement.
 
-This feature is frequently used when SQL scripts need to be executed in production environments. In those cases, *autocommit* is disabled, so all DML statements do not take effect immediately. For example, by using MySQL Workbench as a client, one can easily disable *autocommit* in the menu options. If *autocommit* mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has *autocommit* disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
+The Auto Commit Setting is frequently tuned when SQL scripts need to be executed in production environments. In those cases, *autocommit* is disabled, so all DML statements do not take effect immediately. For example, by using MySQL Workbench as a client, one can easily disable *autocommit* in the menu options. If *autocommit* mode is disabled within a session, the session always has a transaction open. A COMMIT or ROLLBACK statement ends the current transaction and a new one starts. If a session that has *autocommit* disabled ends without explicitly committing the final transaction, MySQL rolls back that transaction.
 
 In summary:
 
 > To use multiple-statement transactions, switch *autocommit* off with the SQL statement SET *autocommit* = 0, then end each transaction with COMMIT or ROLLBACK as appropriate.
 
-> To leave autocommit on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. 
+> For multiple statements with *autocommit* on, begin each transaction with START TRANSACTION and end it with COMMIT or ROLLBACK. 
 
 Both *COMMIT* and *ROLLBACK* release all locks that were set during the current transaction.
 
@@ -193,7 +193,9 @@ As described above being the most strict isolation level, used mostly for specif
 
 # Explicit Locking Reads :link:
 
-According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*. Be aware that, sometimes the MySQL documentation refers to "explicit locking reads" simply as "locking reads".
+> :memo: Sometimes the MySQL documentation refers to "explicit locking reads" simply as "locking reads".
+
+According to the mysql docs: *"If you query data and then insert or update related data within the same transaction, the regular SELECT statement does not give enough protection. Other transactions can update or delete the same rows you just queried"*. 
 
 > Explicit locking reads are only possible when autocommit is disabled (either by beginning transaction with START TRANSACTION or by setting autocommit to 0.) :pencil:
 
