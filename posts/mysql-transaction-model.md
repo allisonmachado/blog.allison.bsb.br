@@ -56,6 +56,10 @@ Suppose in the database there are two accounts, A and B, each with a balance of 
 
 In this scenario, both processes have executed concurrently, interpreting the balance incorrectly, leading to an incorrect final state of the system, where the balance in account A is negative and the total balance of B is $300. To avoid this, serializability would require that one of the transactions wait for the other to complete before executing.
 
+## nomenclature
+
+Serializability issues are often called ["lost updates" or "write skews"][10], they are different categories of concurrency control problems that can occur in a Database Management System (DBMS) when multiple transactions are reading and writing to the same rows concurrently.
+
 # Locking Mechanism :unlock:
 
 Let's first stablish the definition of an *explicit locking read*. In this article, an *explicit locking read* is a [SELECT statement with <u>FOR UPDATE</u> or <u>LOCK IN SHARE MODE</u> at the end][4]. If you use FOR UPDATE, it reads the latest available data, setting exclusive locks on each row it reads. Using LOCK IN SHARE MODE sets a shared lock that permits other transactions to read the examined rows but not to update or delete them. This can be accomplished by the locking mechanism here described.
@@ -220,6 +224,22 @@ Both Locking Read methods described are commonly used to [prevent lost updates a
 
 > :memo: When using the SELECT ... LOCK IN SHARE MODE command or the SERIALIZABLE isolation level, transactions may be more susceptible to deadlocks. A deadlock occurs when two or more transactions are mutually waiting for each other to release locks. To manage this situation, it’s crucial to equip your application with the ability to handle deadlock exceptions. Also, keep transactions small and short in duration to make them less prone to collisions (avoid thinks like communication with external services while a transaction is open) and commit them immediately after making a set of changes.
 
+## optimistic locking
+
+Optimistic locking is a strategy where you read a record, take note of a version number and check that the version hasn't changed before you write the record back (a.k.a compare-and-set). This can solve some cases of ["lost updates" or "write skews"][10] without the need to make use of locks - in mysql it's possible to use this approach using the default REPEATABLE READ transaction isolation level.
+
+> :memo: In MySQL, using the default REPEATABLE READ isolation level, all write operations to be performed should acquire an exclusive lock on the target written record.
+
+It works as follows: 
+
+- Read a record 
+- Take note of a version number
+- Check that the version hasn't changed before you write the record back
+
+If the record is dirty (i.e. different version to yours) you abort the operation:
+
+![OPTIMISTIC LOCKING](images/posts/optimistic-locking.png 'OPTIMISTIC LOCKING')
+*Repeatable Read Isolation Level*
 
 # References :books:
 
@@ -232,6 +252,7 @@ Both Locking Read methods described are commonly used to [prevent lost updates a
 * [Stack Overflow - Lost update vs Write skew][7]
 * [Stack Overflow - Database Integrity][8]
 * [Kleppmann, M. (2017). Snapshot isolation and repeatable read. In Designing Data-Intensive Applications. Sebastopol, CA: O'Reilly Media, Inc.][9]
+* [Stack Overflow - Lost update vs Write skew 2][10]
 
 [1]: https://dev.mysql.com/doc/refman/5.7/en/innodb-locking-transaction-model.html
 [2]: https://www.prisma.io/dataguide/intro/database-glossary#acid
@@ -242,3 +263,4 @@ Both Locking Read methods described are commonly used to [prevent lost updates a
 [7]: https://stackoverflow.com/a/53960539/5874427
 [8]: https://stackoverflow.com/questions/40749730/how-to-properly-use-transactions-and-locks-to-ensure-database-integrity
 [9]: https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/
+[10]: https://stackoverflow.com/a/53960539

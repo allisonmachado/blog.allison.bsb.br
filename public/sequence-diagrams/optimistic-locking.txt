@@ -1,0 +1,23 @@
+title OPTMISTIC LOCKING
+
+participant Session A
+participant DATABASE
+participant Session B
+
+parallel
+Session A-->DATABASE:"autocommit = 0"
+Session B-->DATABASE:"autocommit = 0"
+parallel off
+Session A->DATABASE:select balance, version \nfrom account \nwhere id = 1;
+Session A<--DATABASE:(balance=100, version=1)
+Session B->DATABASE:select balance, version \nfrom account \nwhere id = 1;
+Session B<--DATABASE:(balance=100, version=1)
+
+Session A->DATABASE:update account \nset balance = balance + 10, version = 2 \nwhere id = 1 and version = 1;
+Session B->DATABASE:update account \nset balance = balance + 10, version = 2 \nwhere id = 1 and version = 1;
+Session A<--DATABASE:<< 1 row affected >>
+note left of Session B#gray:<<Lock to wait Session A>>
+Session A->DATABASE:commit;
+Session B<--DATABASE:<< 0 rows affected >>
+note left of Session B#gray:<< decides to abort >>
+Session B->DATABASE:rollback;
