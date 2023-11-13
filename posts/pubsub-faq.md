@@ -20,13 +20,15 @@ A few sentences are just copied from the sources because my intent is not to be 
 
 ## What is Cloud Pub/Sub?
 
-Cloud Pub/Sub is a fully-managed messaging service (a type of message broker or message queue) provided by Google Cloud Platform that enables asynchronous communication between systems or microservices at scale, decoupling senders and receivers in a flexible and reliable way.
+Cloud Pub/Sub is a fully-managed messaging service (a type of message broker or message queue) provided by Google Cloud Platform that enables asynchronous communication between systems or microservices at scale, decoupling message senders and receivers.
 
 ## What are publishers?
 
 In Google Cloud Pub/Sub, a publisher is an entity that sends messages to a Pub/Sub topic. Messages can be published to a topic either individually or in batches, and publishers can be part of an application or service that generates data or events to be consumed by subscribers.
 
 ## What are subscriptions?
+
+> :memo: Subscriptions and Subscribers are not the same concept!
 
 In Google Cloud Pub/Sub, a subscription is a named resource representing the stream of messages from a single, specific topic, to be delivered to the subscriber application. 
 
@@ -42,15 +44,15 @@ In other words, instead of sending the file itself for the target topic, we coul
 
 ## What are a few differences between Pub/Sub and Kafka?
 
-Pub/Sub is made available as a managed service (which means that a lot of DevOps work is handled for you) while Kafka as an open source software. Pub/Sub initially behaved much like a message queue (e.g. Rabbit MQ) whereas Kafka would be better compared to a streaming log, making it really simple to "replay" messages.
+Pub/Sub is a managed service that takes care of much of the DevOps work for you, while Kafka is an open-source software. Initially, Pub/Sub resembled a message queue like Rabbit MQ, while Kafka is better suited for handling streaming logs, making it easy to "replay" messages.
 
-Kafka supports the concept of consumer groups. Consumer groups allow multiple consumers to work together to consume messages from one or more topics. Kafka automatically manages the offset for each consumer in a consumer group. Each consumer in the group is responsible for a subset of the partitions, and Kafka ensures that messages in a partition are consumed by only one consumer within the group (ordered consumption within a partition). Pubsub works by the subscribers acknowledging the messages, the server control the lifecycle of the messages and by default deletes acknowledged ones. Pub/Sub also supports message delivery to push endpoints.
+Kafka introduces the concept of consumer groups, which allows multiple consumers to collaborate in consuming messages from one or more topics. Kafka automatically manages the message offset for each consumer within a group. Each consumer in the group is responsible for handling a portion of the message partitions, and Kafka ensures that each message within a partition is consumed by only one consumer in the group, maintaining order within that partition. Pub/Sub operates differently, relying on message acknowledgment from subscribers, with the server managing message lifecycle and defaulting to deleting acknowledged messages. Pub/Sub also supports message delivery to push endpoints.
 
-In Kafka messages are by default ordered within a partition. You can support this requirement in Pub/Sub using ordering keys. Currently, in Pub/Sub, ordering is guaranteed across messages published in a given region.
+In Kafka, messages are inherently ordered within a partition by default. Pub/Sub can achieve message ordering using ordering keys and currently guarantees message order across messages published within a specific region.
 
-Both Kafka and Pubsub have options to configure the maximum message retention time. 
+Both Kafka and Pub/Sub offer options to configure the maximum message retention time.
 
-Amazon AWS Kinesis can be thought of as a managed Kafka whereas Pub/Sub can be thought of as a managed version of RabbitMQ on steroids.
+You can think of Amazon AWS Kinesis as a managed version of Kafka, and Pub/Sub as a managed "RabbitMQ on steroids".
 
 ## Should I worry about scalability in terms of message ingestion or delivery? 
 
@@ -62,9 +64,9 @@ However, you should keep in mind that the cost of using Pub/Sub will increase as
 
 ## Are Pub/Sub servers located in a specific zone or region ?
 
-Pub/Sub servers run in all Google Cloud regions around the world. This allows the service to offer fast, global data access, but also offers users control over where messages are stored. Cloud Pub/Sub provides global data access meaning that publisher and subscriber clients are not aware of the location of the servers to which they connect or how those services route the data internally.
+Pub/Sub servers are distributed across all Google Cloud regions worldwide. This global presence offers several benefits, such as fast and widespread data access, along with giving users control over where their messages are stored. Cloud Pub/Sub ensures global data access, which means that both publisher and subscriber clients do not need to be aware of the specific server locations they connect to or how data is routed internally within the service.
 
-Pub/Sub’s load balancing mechanisms direct publisher traffic to the nearest Google Cloud data center where data storage is possible. This means that publishers in multiple regions may publish messages to a single topic with low latency. When a subscriber requests messages published to a topic, it connects to the nearest server which aggregates data from all messages published to the topic.
+To efficiently manage publisher traffic, Pub/Sub employs load balancing mechanisms that direct it to the closest Google Cloud data center where data storage is available. As a result, publishers from various regions can publish messages to a single topic with minimal latency. When a subscriber requests messages from a particular topic, it connects to the nearest server, which consolidates data from all the messages published to that topic. This architecture ensures optimal performance and data accessibility across regions.
 
 ## What are some important monitoring aspects to consider when using Pub/Sub?
 
@@ -93,6 +95,9 @@ As a simplistic estimation, **considering no region boundary crosses, no retenti
 
 # Terminology :open_book:
 
+## TL;DR;
+> :memo: In summary, both terms refer to messages that have been delivered but not yet acknowledged. However, an outstanding message is specifically one that is currently in the process of waiting for an acknowledgment, while an unacknowledged message could be either waiting for an acknowledgment or has exceeded its acknowledgment deadline.
+
 ## What does *"unacked message"* mean?
 
 In the context of Google Cloud Pub/Sub, "unacked" is short for "unacknowledged", which refers to messages that have been delivered to a subscriber, but the subscriber has not acknowledged the successful processing of the message back to the server.
@@ -113,11 +118,11 @@ A subscriber is a client application or process that consumes messages from a Pu
 
 When a subscriber connects to a subscription from a topic, it receives messages from that topic through the subscription. Each subscription has a unique name and it's possible to have multiple subscriptions associated with the same topic, each with its own set of subscribers.
 
-## How does a subscription message processing work ?
+## How does a subscription processing work ?
 
 After a message is sent to a subscriber, the subscriber must acknowledge the message. If a message is being processed and a subscriber is yet to acknowledge it, the message is called outstanding.
 
-The subscriber has a configurable, limited amount of time, known as the acknowledgement deadline (ack-deadline), to acknowledge the outstanding message. After the deadline passes, the message is no longer considered outstanding, and Pub/Sub attempts to redeliver the message.
+The subscriber has a configurable, limited amount of time, known as the acknowledgement deadline (ack-deadline), to acknowledge the outstanding message. After the deadline passes, the message is no longer considered outstanding (considered unacked), and Pub/Sub attempts to redeliver the message.
 
 Pub/Sub repeatedly attempts to deliver any message that is not yet acknowledged and not outstanding.
 
@@ -152,7 +157,7 @@ The primary difference between the two mechanisms is that a streaming pull subsc
 
 No. In a push subscription type, you can only specify a single endpoint URL to receive messages. If you need to send messages to multiple endpoints, you will need to create separate push subscriptions for each endpoint. 
 
-Alternatively, you can use pull subscriptions, where you can have multiple subscribers on a sngle subscription.
+Alternatively, you can use pull subscriptions, where you can have multiple subscribers on a single subscription.
 
 ## Having multiple subscribers on a subscription change message delivery?
 
@@ -194,15 +199,15 @@ A dead-letter topic is a subscription property, not a topic property. When you c
 
 If a message cannot be processed by a subscriber and is sent to a dead-letter topic, it is as if the message was acknowledged by the original subscriber. This means that the message will not be redelivered to the original subscriber and will not appear in subsequent pull requests from that subscriber.
 
-In summary: If the Pub/Sub service attempts to deliver a message but the subscriber can't acknowledge it, Pub/Sub can forward the undeliverable message to a dead-letter topic.
+In summary: If the Pub/Sub service attempts to deliver a message but the subscriber can't acknowledge it, Pub/Sub can forward the undeliverable message to a dead-letter topic or the message may eventually expire.
 
 # Message Replay :movie_camera:
 
 ## Can Pub/Sub replay/resend deleted messages?
 
-No, unless you use the PubSub Seek feature.
+No.
 
-To seek to a time in the past and replay previously-acknowledged messages, you must first enable message retention on the topic or configure the subscription to retain acknowledged messages. Topic message retention also allows a subscription to replay messages that are published before you created a subscription.
+To seek to a time in the past and replay previously-acknowledged messages, you must first enable acknowledged message retention on the topic or configure the subscription to retain acknowledged messages. Topic message retention also allows a subscription to replay messages that are published before you created a subscription.
 
 If topic message retention is configured, the unacknowledged message is deleted from the subscription only when its age exceeds the maximum of the topic's or subscription's retention duration property.
 
@@ -212,30 +217,22 @@ It's possible to create subscription snapshots to capture the message acknowledg
 
 Another possibility is to *"seek to a timestamp"* to retrieve messages published after that timestamp, if message retention is enabled.
 
-Note that, If you seek to a snapshot using a subscription with a filter, the Pub/Sub service only redelivers the messages in the snapshot that match the filter of the subscription making the seek request.
-
 ## Should I seek to a snapshot or to a timestamp?
 
-PubSub Seek to a timestamp feature allows you to reset the subscription's cursor to a specified point in time. This means that you can rewind the subscription to an earlier point in time and receive messages again, including messages that were already acknowledged or unacknowledged.
+PubSub Seek to a timestamp feature allows you to reset the subscription's cursor to a specified point in time. This means that you can rewind the subscription to an earlier point in time and receive messages again, including messages that were already acknowledged or unacknowledged, up to a limit of 31 days.
 
-When you seek to a timestamp, the subscription will start receiving messages that were published after the specified timestamp, up to a limit of 31 days if message retention was enabled at the topic level.
-
-On the other hand, when you seek to a snapshot, you reset the cursor of a subscription to a specific snapshot. A snapshot is a point-in-time copy of a subscription's backlog, and it includes all the unacknowledged messages in the subscription at the time the snapshot was created. When using a snapshot you are not required to enable message retention at a topic level. A snapshot in Google Cloud Pub/Sub can only include messages up to a maximum retention period of 7 days.
+On the other hand, when you seek to a snapshot, you reset the cursor of a subscription to a specific snapshot. A snapshot is a point-in-time copy of a subscription's backlog, and it includes all the unacknowledged messages in the subscription at the time the snapshot was created, up to a maximum retention period of 7 days.
 
 ### How does "seeking to a snapshot" work?
 
 Once a subscription snapshot is created, it retains:
 
-All messages that were unacknowledged in the source subscription at the time of the snapshot's creation. 
-Any messages published to the topic thereafter.
-
-One use case is to test subscriber code on known data - creating an isolated subscription for a topic and seeking to a created snapshot to replay the saved messages.
+- All messages that were unacknowledged in the source subscription at the time of the snapshot's creation. 
+- Any messages published to the topic thereafter.
 
 ### How does "seeking to a timestamp" work?
 
-In PubSub, after enabling message retention, seeking to a timestamp in a subscription marks every message received by Pub/Sub before that time as acknowledged, and all messages received after that time as unacknowledged - to replay and reprocess previously acknowledged messages in that subscription.
-
-To seek to a timestamp, you must first configure the subscription to retain acknowledged messages. You only need to enable the retain of acknowledged messages if you intend to seek to a timestamp - seeking to a snapshot doesn't require it.
+In PubSub, seeking to a timestamp in a subscription marks every message received by Pub/Sub before that time as acknowledged, and all messages received after that time as unacknowledged - to replay and reprocess previously acknowledged messages in that subscription.
 
 ### Can snapshots last forever?
 
