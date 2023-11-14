@@ -162,7 +162,7 @@ docker system prune -a
 
 Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image.
 
-I will not elaborate on the contents of the Dockerfile, instead I will describe how the CLI works.
+I will not elaborate on how to create Dockerfiles, instead I will just describe how the CLI works. If you are interested in [creating your own Dockerfiles][10], make sure to read about the best practices and understand the difference between [CMD and ENTRYPOINT][11].
 
 ## Build with a Name and Tag
 
@@ -290,6 +290,8 @@ Therefore, it's just a matter of copying the files in the host and zipping them!
 * [Docker Volume Types][7]
 * [Linux Docker Engine][8]
 * [Backup types][9]
+* [Dockerfile best practices][10]
+* [Entrypoint vs CMD][11]
 
 [1]: https://docs.docker.com/engine/reference/run/
 [2]: https://docs.docker.com/network/bridge/
@@ -300,3 +302,5 @@ Therefore, it's just a matter of copying the files in the host and zipping them!
 [7]: https://stackoverflow.com/questions/47150829/what-is-the-difference-between-binding-mounts-and-volumes-while-handling-persist
 [8]: https://docs.docker.com/engine/install/ubuntu/
 [9]: https://dev.mysql.com/doc/refman/8.0/en/backup-types.html
+[10]: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+[11]: https://www.youtube.com/watch?v=U1P7bqVM7xM
