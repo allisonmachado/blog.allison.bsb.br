@@ -93,3 +93,11 @@ Go into your submodules and fetch and update for you.
 ```bash
 git submodule update --init --remote
 ```
+
+## [Change commit's author](https://stackoverflow.com/questions/3042437/how-can-i-change-the-commit-author-for-a-single-commit)
+
+```bash
+$ git commit --amend --author="Author Name <email@address.com>" --no-edit
+```
+
+The author name and email can be found using `git log`.
