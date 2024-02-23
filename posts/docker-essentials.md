@@ -160,9 +160,7 @@ docker system prune -a
 
 # Build it rock solid :european_castle:
 
-Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image.
-
-I will not elaborate on how to create Dockerfiles, instead I will just describe how the CLI works. If you are interested in [creating your own Dockerfiles][10], make sure to read about the best practices and understand the difference between [CMD and ENTRYPOINT][11].
+Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image. The best place to understand the structure and syntax of this file is [the official docker documentation][10].
 
 ## Build with a Name and Tag
 
@@ -189,8 +187,37 @@ You can list the installed images with their Ids and digests by running:
 docker image ls --digests
 ```
 
-----
+## CMD vs ENTRYPOINT
 
+In a Dockerfile, `ENTRYPOINT` and `CMD` instructions define what command gets executed when running a container. The main difference between them is how they interact with the docker run command and how they can be overridden.
+
+The `ENTRYPOINT` instruction allows you to configure a container that will run as an executable. The command following the `ENTRYPOINT` instruction gets executed when the container starts up. This command does not get overridden from the docker run command line arguments. Dockerfile example:
+
+```
+FROM ubuntu
+ENTRYPOINT ["echo", "Hello"]
+```
+
+Corresponding docker run command:
+```sh
+docker run <image> World # Output: Hello World
+```
+
+The `CMD` instruction provides defaults for an executing container but can be overridden by providing command line arguments to docker run. Dockerfile example:
+
+```
+FROM ubuntu
+CMD ["echo", "Hello"]
+```
+
+Corresponding docker run command (notice you need to provide the executable):
+```sh
+docker run <image> echo "Hello" # Output: World
+```
+
+In summary, `ENTRYPOINT` is designed to make your container behave like a standalone executable, while `CMD` is used to provide default arguments that can be overridden from the command line when docker run is used. If both are used in the same Dockerfile, `CMD` values will be appended to `ENTRYPOINT` values.
+
+----
 
 # Backup and Restore :dvd:
 
