@@ -101,3 +101,9 @@ $ git commit --amend --author="Author Name <email@address.com>" --no-edit
 ```
 
 The author name and email can be found using `git log`.
+
+## [Reuse the previous commit message and also want to edit it](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--cltcommitgt)
+
+```bash
+$ git commit -c HEAD
+```
