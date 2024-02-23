@@ -217,6 +217,35 @@ docker run <image> echo "Hello" # Output: World
 
 In summary, `ENTRYPOINT` is designed to make your container behave like a standalone executable, while `CMD` is used to provide default arguments that can be overridden from the command line when docker run is used. If both are used in the same Dockerfile, `CMD` values will be appended to `ENTRYPOINT` values.
 
+## Multistage Builds
+
+Multistage builds are a feature that allows you to create more efficient images by using multiple build stages within a single `Dockerfile`. This feature is particularly useful for creating smaller, more optimized images, as well as simplifying the build process for complex applications.
+
+The basic idea behind multistage builds is to use one set of build stages to compile and build your application, and then copy only the necessary artifacts into a final stage, discarding any unnecessary intermediate build dependencies. This can significantly reduce the size of the final Docker image.
+
+Let's see an example:
+
+```
+FROM node:18 AS builder
+  WORKDIR /app
+  COPY package*.json .
+  COPY src ./src
+  COPY tsconfig.json .
+  RUN npm ci --omit=optional --audit=false --fund=false --ignore-scripts
+  RUN npm run build
+
+FROM node:18 AS runner
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm ci --omit=optional --omit=dev --audit=false --fund=false --ignore-scripts
+  COPY --from=builder /app/dist ./dist
+  RUN useradd -m nodeuser
+  USER nodeuser
+  CMD ["node", "dist/index.js"]
+```
+
+In the `Dockerfile` above, the first stage called `builder` copies and install all necessary files for compiling a nodejs typescript application. In the second stage called `runner`, we copy the generated javascript files and install only production dependencies, creating an optimized docker image - the first `builder` layer will get discarded.
+
 ----
 
 # Backup and Restore :dvd:
