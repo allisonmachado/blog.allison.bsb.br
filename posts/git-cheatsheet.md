@@ -107,3 +107,10 @@ The author name and email can be found using `git log`.
 ```bash
 $ git commit -c HEAD
 ```
+
+## [Restore local deleted branch](https://stackoverflow.com/a/4025983)
+
+The commit hash should be known (maybe inspecting terminal log history)
+```bash
+$ git branch branchName <sha1>
+```
