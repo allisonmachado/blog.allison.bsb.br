@@ -174,7 +174,7 @@ This isolation level provides [consistent non-locking reads][9], for simple SELE
 
 However, each consistent read, even within the same transaction, sets and reads its own fresh snapshot. Therefore, it does not prevent the non-repeatable read nor phantom read phenomena.
 
-In the case of *explicit locking reads*, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records, allowing phantom reads to happen (Gap locking is disabled in the transaction isolation level READ COMMITTED).
+In the case of *explicit locking reads*, UPDATE statements, and DELETE statements, MySQL only locks index records, not the gaps before them, and thus permits the free insertion of new records next to locked records - in  other words, Gap locking is disabled in the transaction isolation level READ COMMITTED.
 
 ## repeatable-read
 
