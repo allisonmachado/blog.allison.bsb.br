@@ -9,6 +9,27 @@ date: "2022-05-15"
 
 This cheat sheet provides a quick overview of some time saving git commands. If you need more information or context, click the title of each section.
 
+## [Merge last N commits](https://stackoverflow.com/questions/5189560/how-do-i-squash-my-last-n-commits-together)
+
+```bash
+$ git reset --soft "HEAD~n"
+$ git commit -m "new commit message"
+```
+
+## [Change commit order](https://stackoverflow.com/a/58087338)
+
+Here, 3 is the number of commits that need reordering:
+
+```bash
+$ git rebase -i HEAD~3
+```
+
+## [Reuse the previous commit message and also want to edit it](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--cltcommitgt)
+
+```bash
+$ git commit -c HEAD
+```
+
 ## [Avoid Rebase Hell](https://blog.oddbit.com/post/2019-06-17-avoid-rebase-hell-squashing-wi/)
 
 ```bash
@@ -23,13 +44,6 @@ $ git checkout --theirs ./path/to/file/or/directory
 ```
 ```bash
 $ git checkout --ours ./path/to/file/or/directory
-```
-
-## [Merge last N commits](https://stackoverflow.com/questions/5189560/how-do-i-squash-my-last-n-commits-together)
-
-```bash
-$ git reset --soft "HEAD~n"
-$ git commit -m "new commit message"
 ```
 
 ## [Push the current branch to its upstream by default](https://stackoverflow.com/questions/948354/default-behavior-of-git-push-without-a-branch-specified)
@@ -101,12 +115,6 @@ $ git commit --amend --author="Author Name <email@address.com>" --no-edit
 ```
 
 The author name and email can be found using `git log`.
-
-## [Reuse the previous commit message and also want to edit it](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--cltcommitgt)
-
-```bash
-$ git commit -c HEAD
-```
 
 ## [Restore local deleted branch](https://stackoverflow.com/a/4025983)
 
