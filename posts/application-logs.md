@@ -21,7 +21,7 @@ Logs should inform about the execution and lifecycle of our application in a way
 
 ## Frequency :stopwatch:
 
-Too much information can be equivalent to no information. Therefore, it does not make sense to either not send logs or log each and every step of our app. When talking about new implementations, maybe it makes sense to start writing more log statements than usual and, as the feature proves to be stable, some logs could be revisited and updated to have a less important Criticality Levels. As time passes, a good portion of them could even deleted to avoid excessive logging.
+Too much information can be equivalent to no information. Therefore, it does not make sense to either not send logs or log each and every step of our app. When talking about new implementations, maybe it makes sense to start writing more log statements than usual and, as the feature proves to be stable, some logs could be revisited and updated to have a less important Criticality Levels. As time passes, a good portion of them could even be deleted to avoid excessive logging.
 
 ## Aggregated Values :bucket:
 
