@@ -9,6 +9,12 @@ date: "2022-05-15"
 
 This cheat sheet provides a quick overview of some time saving git commands. If you need more information or context, click the title of each section.
 
+## [Undo last commit (locally)](https://git-scm.com/docs/git-reset)
+
+```bash
+$ git reset HEAD~ 
+```
+
 ## [Merge last N commits](https://stackoverflow.com/questions/5189560/how-do-i-squash-my-last-n-commits-together)
 
 ```bash
@@ -22,6 +28,14 @@ Here, 3 is the number of commits that need reordering:
 
 ```bash
 $ git rebase -i HEAD~3
+```
+
+Then use the editor to edit the commit lines.
+
+## [Reuse the previous commit message](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--cltcommitgt)
+
+```bash
+$ git commit -C HEAD
 ```
 
 ## [Reuse the previous commit message and also want to edit it](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--cltcommitgt)
@@ -46,13 +60,6 @@ $ git checkout --theirs ./path/to/file/or/directory
 $ git checkout --ours ./path/to/file/or/directory
 ```
 
-## [Push the current branch to its upstream by default](https://stackoverflow.com/questions/948354/default-behavior-of-git-push-without-a-branch-specified)
-
-```bash
-$ git config --global push.default simple # first config
-$ git push origin # then simply push to origin
-```
-
 ## [Clean up local branches by prefix (e.g 'MT-')](https://git-scm.com/docs/git-branch#_options)
 
 ```bash
@@ -63,12 +70,6 @@ $ git branch -D `git branch | grep MT-`
 
 ```bash
 $ git branch -rd `git branch -r | grep MT-`
-```
-
-## [Undo last commit (locally)](https://git-scm.com/docs/git-reset)
-
-```bash
-$ git reset HEAD~ 
 ```
 
 ## [Use GitHub to compare two branches](https://docs.github.com/en/pull-requests/committing-changes-to-your-project/viewing-and-comparing-commits/comparing-commits)
