@@ -11,8 +11,8 @@ I tried, as much as possible, to put the questions in an order that require no p
 
 # Disclaimer :exclamation:
 
-This post was used with the help of multiple [References](#user-content-references-books), [ChatGPT][1] and the [Cloud Tasks][2] docs.
-A few sentences are just copied from the sources because my intent is not to be a professional writer, I just want to condense information in a quick to read and absorb way.
+This post was used with the help of multiple [References](#user-content-references-books) and the [Cloud Tasks][2] docs.
+A few sentences are just copied from the sources because my intent is not to be a technical writer, I just want to condense information in a quick to read and absorb way.
 
 ----
 

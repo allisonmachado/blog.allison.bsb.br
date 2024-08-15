@@ -13,8 +13,8 @@ All the source code bellow can be easily downloaded and executed [cloning this g
 
 # Disclaimer :exclamation:
 
-This post was used with the help of multiple [References](#user-content-references-books), [ChatGPT][1] and the [Nginx Documentation][2].
-A few sentences are just copied from the sources because my intent is not to be a professional writer, I just want to condense information in a quick to read and absorb way.
+This post was used with the help of multiple [References](#user-content-references-books) and the [Nginx Documentation][2].
+A few sentences are just copied from the sources because my intent is not to be a technical writer, I just want to condense information in a quick to read and absorb way.
 
 ----
 
