@@ -32,7 +32,7 @@ In Google Cloud Pub/Sub, a publisher is an entity that sends messages to a Pub/S
 
 In Google Cloud Pub/Sub, a subscription is a named resource representing the stream of messages from a single, specific topic, to be delivered to the subscriber application. 
 
-Subscriptions can be configured with various settings such as acknowledgement deadline, filtering, and flow control to control how messages are delivered to subscribers. A single topic can have multiple subscriptions, but a subscription always point to a single topic.
+Subscriptions can be configured with various settings such as acknowledgement deadline and filtering, to control how messages are delivered to subscribers. A single topic can have multiple subscriptions, but a subscription always point to a single topic.
 
 ## Can I send a big file using Pub/Sub?
 
