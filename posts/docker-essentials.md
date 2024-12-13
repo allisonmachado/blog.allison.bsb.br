@@ -27,7 +27,7 @@ By default all containers are created inside the default [Docker Bridge-Network]
 > - To find the instance internal IP you can [inspect][3] the instance
 > - If you prefer referencing containers by name you can use [docker-compose][6].
 
-If you want to connect to it from another container, you can do so by referencing it's Docker internal IP address:
+If you want to connect to it from another container (also from default bridge network), you can do so by referencing it's Docker internal IP address:
 
 ```bash
 docker run -it \
@@ -43,7 +43,7 @@ If you just want to *"log into"* your running container, use the [exec][4] comma
 
 The command above starts an interactive Bash shell session inside the running Docker container named `mysql-sandbox`.
 
-## Internal vs Networking
+## Networking
 
 Docker manages networking in a way that allows containers to communicate with each other and the outside world while maintaining isolation by default. There are some network modes that can be used, such as bridge, host, none. The bridge mode is the default, where a new network stack is created for the container on the docker bridge. The host mode allows the container to share the host’s network stack and is useful when the container needs to access network services running on the host itself.
 
@@ -53,14 +53,14 @@ When you run a container without specifying a network, Docker creates a bridge n
 Docker allows you to map ports on the host to ports in a container. This is essential for allowing external access to services running in containers. For example, if you have a web server in a container listening on port 80, you can map it to port 8080 on the host, allowing you to access it using http://host_ip:8080.
 
 ### Host Network:
-When you use --network="host" on a Linux host, it instructs Docker to run the container in the host's network namespace, effectively allowing it to share the same network stack as the host. This means the container can directly access host services on their ports.
+When you use `--network="host"` on a Linux host, it instructs Docker to run the container in the host's network namespace, effectively allowing it to share the same network stack as the host. This means the container can directly access host services on their ports.
 
-Keep in mind that the --network="host" option in Docker is primarily designed [for Linux hosts][8] and does not work as expected on macOS or other non-Linux operating systems. 
+Keep in mind that the `--network="host"` option in Docker is primarily designed [for Linux hosts][8] and does not work as expected on macOS or other non-Linux operating systems. 
 
-On macOS, Docker Desktop runs a lightweight Linux VM under the hood to provide a Linux-like environment for Docker containers. However, macOS does not have the same "host" network namespace concept as Linux. When you use --network="host" on macOS, it has no effect on container networking. The container will continue to use its own network namespace, separate from the host's network.
+On macOS, Docker Desktop runs a lightweight Linux VM under the hood to provide a Linux-like environment for Docker containers. However, macOS does not have the same "host" network namespace concept as Linux. When you use `--network="host"` on macOS, it has no effect on container networking. The container will continue to use its own network namespace, separate from the host's network.
 
 
-## Docker vs Filesystem
+## Filesystem
 
 In a containerized environment, any changes made to the container’s filesystem are lost when the container is removed. This is because a container’s filesystem only exists as long as the container does.
 
@@ -68,9 +68,7 @@ However, these changes are not lost if the container is only stopped and not rem
 
 As for [volumes][7], they provide a way to persist data and share it among containers. They allow specific filesystem paths of the container to be connected back to the host machine, providing more consistent storage that is **independent of the container**. This is especially important for stateful applications.
 
-By default, when a container is removed, an associated volume is not automatically removed as well. Those are called a dangling volumes, because they're actually not being used by any active container.
-
-Sometimes its good to have a temporary container (flag `--rm`), those containers do not leave dangling volumes behind:
+Note that by default, when a container is removed, an associated volume is not automatically removed as well. That can lead to forgotten dangling volumes, because they're actually not being used by any active container. To have a temporary container that do not leave dangling volumes behind use the `--rm` flag:
 
 ```sh
 docker run \
@@ -81,7 +79,7 @@ docker run \
   -d mysql:8.0.34
 ```
 
-## Filesystem vs Developer
+## Local Development
 
 When developing an application, we can use a `bind-mount` to mount source code into the container and let it see code changes [right away](https://docs.docker.com/get-started/06_bind_mounts/) :dancer:.
 
@@ -93,19 +91,15 @@ For example, with the -v flag, the syntax would look like this:
 docker run -v /path/on/host:/path/in/container my-container
 ```
 
-Here, `/path/on/host` is the path to the file or directory on the host machine, and `/path/in/container` is the path where the file or directory is mounted in the container.
-
-Similarly, with the --mount flag, the syntax would be: 
+Here, `/path/on/host` is the path to the file or directory on the host machine, and `/path/in/container` is the path where the file or directory is mounted in the container. Similarly, with the --mount flag, the syntax would be: 
 
 ```sh
 docker run --mount type=bind,src=/path/on/host,target=/path/in/container my-container
 ```
 
-In this case, src is the path to the file or directory on the host machine, and target is the path where the file or directory is mounted in the container.
+In this case, src is the path to the file or directory on the host machine, and target is the path where the file or directory is mounted in the container. Any changes to the files in a bind mounted directory on the host machine are immediately available within the container.
 
-Any changes to the files in a bind mounted directory on the host machine are immediately available within the container.
-
-## Simply Run Bash
+## Simply Bash
 
 Sometimes its useful to have a Bash session in your favorite Linux distribution to test some commands:
 
@@ -158,9 +152,9 @@ docker system prune -a
 
 ----
 
-# Build it rock solid :european_castle:
+# Just Build It :european_castle:
 
-Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file that contains a set of instructions for building a Docker image. The best place to understand the structure and syntax of this file is [the official docker documentation][10].
+Docker allows you to create new Docker images to ship your application through a Dockerfile :rocket:. A Dockerfile is a text file containing a set of instructions to build a Docker image, defining the environment and dependencies required for your application's containers. The best place to understand the structure and syntax of this file is [the official docker documentation][10].
 
 ## Build with a Name and Tag
 
@@ -179,7 +173,7 @@ A docker image usually has 3 parts:
 
 Names are usually linked to the software the image runs and tags are usually associated with the release version. The digest is an Id that is created during build time by hashing the image contents.
 
-Images can be pulled using `name`, or `name:tag` or `name@sha256:digest`. If we do not specify a version tag we will pull the latest.
+Images can be pulled using `name`, or `name:tag` or `name@sha256:digest`. If a version tag is not specified Docker will pull the latest.
 
 You can list the installed images with their Ids and digests by running:
 
@@ -193,7 +187,7 @@ In a Dockerfile, `ENTRYPOINT` and `CMD` instructions define what command gets ex
 
 The `ENTRYPOINT` instruction allows you to configure a container that will run as an executable. The command following the `ENTRYPOINT` instruction gets executed when the container starts up. This command does not get overridden from the docker run command line arguments. Dockerfile example:
 
-```
+```dockerfile
 FROM ubuntu
 ENTRYPOINT ["echo", "Hello"]
 ```
@@ -205,7 +199,7 @@ docker run <image> World # Output: Hello World
 
 The `CMD` instruction provides defaults for an executing container but can be overridden by providing command line arguments to docker run. Dockerfile example:
 
-```
+```dockerfile
 FROM ubuntu
 CMD ["echo", "Hello"]
 ```
@@ -217,6 +211,37 @@ docker run <image> echo "Hello" # Output: World
 
 In summary, `ENTRYPOINT` is designed to make your container behave like a standalone executable, while `CMD` is used to provide default arguments that can be overridden from the command line when docker run is used. If both are used in the same Dockerfile, `CMD` values will be appended to `ENTRYPOINT` values.
 
+## Dockerfile Debug
+
+Imagine you need to create a docker image with specific configuration for your application and you need to debug this process along the way. It is possible to apply a series of instructions in a dockerfile and pause to see if the modifications took effect.
+
+Let's take a look at the simplest example possible, consider this dockerfile:
+
+```dockerfile
+FROM ubuntu
+RUN apt update
+RUN apt install -y nodejs
+```
+
+Before adding more instructions to this file, you want to make sure the `nodejs` installation instructions are applied successfully. In order to do that, what you can do is to effectively build this image:
+
+```sh
+docker build . --tag docker-playground
+```
+
+After that you can spawn a container from this image by providing the `bash` command, but note that you need to use the `-it` flag to start an interactive session:
+
+```sh
+docker run -it docker-playground bash
+```
+
+Finally you can see if `nodejs` is successfully installed inside the container:
+
+```sh
+root@docker-playground:/# node -v
+v18.19.1
+```
+
 ## Multistage Builds
 
 Multistage builds are a feature that allows you to create more efficient images by using multiple build stages within a single `Dockerfile`. This feature is particularly useful for creating smaller, more optimized images, as well as simplifying the build process for complex applications.
@@ -225,7 +250,7 @@ The basic idea behind multistage builds is to use one set of build stages to com
 
 Let's see an example:
 
-```
+```dockerfile
 FROM node:18 AS builder
   WORKDIR /app
   COPY package*.json .
@@ -252,7 +277,7 @@ In the `Dockerfile` above, the first stage called `builder` copies and install a
 
 Messing up with a local database installation can happen in a local development environment, hence there should be a quick way to backup and restore a local database state, right? :sunglasses:
 
-> TL;DR - This is accomplished backing up a container volume and restoring it into another container when desired.
+## Volumes with no bind mounts
 
 First determine the target backup volume, you should know which volumes are being used by which containers:
 
@@ -282,8 +307,25 @@ $ docker run -p 127.0.0.1:3308:3306 \
   -d mysql:8.0.34
 ```
 
-----
+## MySQL from a physical backup
 
+It's really practical to backup a local database if we use bind mounts. 
+We could simulate a [physical backup][9], which are taken by directly copying the database files from the storage medium where MySQL data is stored.
+
+First let's run a container like this:
+
+```sh
+docker run -d \
+    --name test-database \
+    -p 127.0.0.1:3306:3306 \
+    -v ~/Workspace/docker-volumes/test-database:/var/lib/mysql mysql:8.0.34
+```
+
+All mysql data will be saved on the host path:
+
+- **~/Workspace/docker-volumes/test-database**
+
+Therefore, it's just a matter of copying the files in the host and zipping them! :package:
 
 ## MySQL from logical backup
 
@@ -314,26 +356,6 @@ docker run  \
   --name my-pre-populated-container \
   -d my-pre-populated-db
 ```
-
-## MySQL from a physical backup
-
-It's really practical to backup a local database if we use bind mounts. 
-We could simulate a [physical backup][9], which are taken by directly copying the database files from the storage medium where MySQL data is stored.
-
-First let's run a container like this:
-
-```sh
-docker run -d \
-    --name test-database \
-    -p 127.0.0.1:3306:3306 \
-    -v ~/Workspace/docker-volumes/test-database:/var/lib/mysql mysql:8.0.34
-```
-
-All mysql data will be saved on the host path:
-
-- **~/Workspace/docker-volumes/test-database**
-
-Therefore, it's just a matter of copying the files in the host and zipping them! :package:
 
 # References :books:
 
